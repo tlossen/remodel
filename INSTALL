@@ -1,3 +1,6 @@
 brew install yajl
 gem install yajl-ruby
 
+brew install redis
+gem install redis
+

@@ -5,9 +5,6 @@ module Remodel
     def self.property(name)
       name = name.to_sym
       
-      @properties ||= []
-      @properties << name
-      
       define_method(name) do
         @attributes[name]
       end
@@ -22,11 +19,21 @@ module Remodel
     end
 
     def initialize(attributes = {})
-      @attributes = attributes.clone
+      @attributes = symbolize_keys attributes
     end
     
     def to_json
       Yajl::Encoder.encode(@attributes)
+    end
+    
+    private
+    
+    def symbolize_keys(hash)
+      result = {}
+      hash.each do |key, value|
+        result[key.to_sym] = value
+      end
+      result
     end
     
   end
