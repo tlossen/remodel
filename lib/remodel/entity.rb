@@ -1,41 +1,38 @@
-module Remodel
+class Remodel::Entity
   
-  class Entity
-    
-    def self.property(name)
-      name = name.to_sym
-      
-      define_method(name) do
-        @attributes[name]
-      end
-      
-      define_method("#{name}=") do |value|
-        @attributes[name] = value
-      end
-    end
-    
-    def self.from_json(json)
-      new(Yajl::Parser.parse(json))
-    end
+  def initialize(attributes = {})
+    @attributes = normalize(attributes)
+  end
+  
+  def self.from_json(json)
+    new(Yajl::Parser.parse(json))
+  end
 
-    def initialize(attributes = {})
-      @attributes = symbolize_keys attributes
+  def to_json
+    Yajl::Encoder.encode(@attributes)
+  end
+
+protected
+
+  def self.property(name)
+    name = name.to_sym
+    properties << name  
+    define_method(name) { @attributes[name] }
+    define_method("#{name}=") { |value| @attributes[name] = value }
+  end
+
+  def self.properties
+    @properties ||= Set.new
+  end
+  
+private
+
+  def normalize(attributes)
+    result = {}
+    attributes.each do |name, value|
+      result[name.to_sym] = value if self.class.properties.include? name.to_sym
     end
-    
-    def to_json
-      Yajl::Encoder.encode(@attributes)
-    end
-    
-  private
-    
-    def symbolize_keys(hash)
-      result = {}
-      hash.each do |key, value|
-        result[key.to_sym] = value
-      end
-      result
-    end
-    
+    result
   end
   
 end

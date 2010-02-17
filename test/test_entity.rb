@@ -1,22 +1,38 @@
 require 'helper'
 
-
 class Foo < Remodel::Entity
-  
   property :x
   property :y
-
 end
-
 
 class TestEntity < Test::Unit::TestCase
 
+  context "new" do
+    should "set properties" do
+      foo = Foo.new :x => 1, :y => 2
+      assert 1, foo.x
+      assert 2, foo.y
+    end
+    
+    should "ignore undefined properties" do
+      foo = Foo.new :z => 3
+      assert foo.instance_eval { !@attributes.key? :z }
+    end
+  end
+
   context "properties" do
-    should "have property x" do
-      foo = Foo.new :x => 23
+    should "have getter and setter for property x" do
+      foo = Foo.new
+      foo.x = 23
       assert_equal 23, foo.x
-      foo.x += 1
-      assert_equal 24, foo.x
+      foo.x += 10
+      assert_equal 33, foo.x
+    end
+    
+    should "not have property z" do
+      foo = Foo.new
+      assert_raise(NoMethodError) { foo.z }
+      assert_raise(NoMethodError) { foo.z = 42 }
     end
   end
   
