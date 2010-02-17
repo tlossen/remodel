@@ -1,7 +1,7 @@
 require 'helper'
 
 
-class Foo < Remodel::Base
+class Foo < Remodel::Entity
   
   property :x
   property :y
@@ -9,7 +9,7 @@ class Foo < Remodel::Base
 end
 
 
-class TestBase < Test::Unit::TestCase
+class TestEntity < Test::Unit::TestCase
 
   context "properties" do
     should "have property x" do

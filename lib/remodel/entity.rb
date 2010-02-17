@@ -1,6 +1,6 @@
 module Remodel
   
-  class Base
+  class Entity
     
     def self.property(name)
       name = name.to_sym
@@ -26,7 +26,7 @@ module Remodel
       Yajl::Encoder.encode(@attributes)
     end
     
-    private
+  private
     
     def symbolize_keys(hash)
       result = {}
