@@ -35,6 +35,37 @@ class TestEntity < Test::Unit::TestCase
       assert Remodel.redis.get(foo.key)
     end
   end
+  
+  context "save" do
+    setup do
+      Remodel.redis.flushdb
+    end
+    
+    should "store the entity in redis" do
+      foo = Foo.new
+      foo.x = 42
+      foo.save
+      assert 1, foo.key
+      assert Remodel.redis.get(foo.key)
+    end
+  end
+  
+  context "find" do
+    setup do
+      Remodel.redis.flushdb
+      @foo = Foo.create :x => 'hello', :y => 123
+    end
+    
+    should "load an entity from redis" do
+      foo = Foo.find(@foo.key)
+      assert_equal foo.x, @foo.x
+      assert_equal foo.y, @foo.y
+    end
+    
+    should "raise NotFound if the key does not exist" do
+      assert_raise(Remodel::NotFound) { Foo.find(23) }
+    end
+  end
 
   context "properties" do
     should "always have a property key" do
