@@ -1,9 +1,14 @@
 require 'rubygems'
 require 'yajl'
 require 'set'
+require 'redis'
 
-#require 'redis'
+module Remodel
 
-module Remodel; end
+  def self.redis
+    @redis ||= Redis.new
+  end
+  
+end
 
 require File.dirname(__FILE__) + "/remodel/entity.rb"

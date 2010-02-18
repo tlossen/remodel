@@ -19,9 +19,30 @@ class TestEntity < Test::Unit::TestCase
       assert foo.instance_eval { !@attributes.key? :z }
     end
   end
+  
+  context "create" do
+    setup do
+      Remodel.redis.flushdb
+    end
+    
+    should "give the entity a key" do
+      foo = Foo.create :x => 'hello', :y => false
+      assert_equal 1, foo.key
+    end
+    
+    should "store the entity in redis" do
+      foo = Foo.create :x => 'hello', :y => false
+      assert Remodel.redis.get(foo.key)
+    end
+  end
 
   context "properties" do
-    should "have getter and setter for property x" do
+    should "always have a property key" do
+      foo = Foo.new
+      assert foo.key.nil?
+    end
+    
+    should "have property x" do
       foo = Foo.new
       foo.x = 23
       assert_equal 23, foo.x
