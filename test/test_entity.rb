@@ -1,8 +1,18 @@
 require 'helper'
 
 class Foo < Remodel::Entity
+
+  has_many :items
+  
   property :x
   property :y
+
+end
+
+class Item < Remodel::Entity
+  
+  belongs_to :foo
+  
 end
 
 class TestEntity < Test::Unit::TestCase
@@ -85,6 +95,20 @@ class TestEntity < Test::Unit::TestCase
       foo = Foo.new
       assert_raise(NoMethodError) { foo.z }
       assert_raise(NoMethodError) { foo.z = 42 }
+    end
+  end
+  
+  context "has_many" do
+    should "have a getter for the children" do
+      foo = Foo.create
+      assert_equal [], foo.items
+    end
+  end
+  
+  context "belongs_to" do
+    should "have a getter for the parent" do
+      item = Item.create
+      assert item.foo.nil?
     end
   end
   

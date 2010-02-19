@@ -40,6 +40,14 @@ module Remodel
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
+    
+    def self.has_many(children)
+      define_method(children.to_sym) { [] }
+    end
+    
+    def self.belongs_to(parent)
+      define_method(parent.to_sym) { nil }
+    end
 
     def self.redis
       Remodel.redis
