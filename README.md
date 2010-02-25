@@ -11,6 +11,16 @@ remodel is meant as a direct replacement for ActiveRecord and
 offers familiar syntax (`has_many`, `belongs_to` ...) to build
 your domain model in ruby.
 
+
+## dependencies
+
+	brew install yajl
+	gem install yajl-ruby
+
+	brew install redis
+	gem install redis
+
+
 ## status
 
 pre-alpha. play around with it at your own risk :)
