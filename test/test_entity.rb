@@ -1,18 +1,13 @@
 require 'helper'
 
 class Foo < Remodel::Entity
-
   has_many :items
-  
   property :x
   property :y
-
 end
 
 class Item < Remodel::Entity
-  
   belongs_to :foo
-  
 end
 
 class TestEntity < Test::Unit::TestCase
@@ -32,37 +27,56 @@ class TestEntity < Test::Unit::TestCase
   
   context "create" do
     setup do
-      Remodel.redis.flushdb
+      redis.flushdb
     end
     
-    should "give the entity a key" do
-      foo = Foo.create :x => 'hello', :y => false
-      assert_equal 1, foo.key
+    should "give the entity a key based on the class name" do
+      assert_equal 'f:1', Foo.create.key
+      assert_equal 'i:1', Item.create.key
+      assert_equal 'i:2', Item.create.key
     end
     
-    should "store the entity in redis" do
+    should "store the entity under its key" do
       foo = Foo.create :x => 'hello', :y => false
-      assert Remodel.redis.get(foo.key)
+      assert redis.exists(foo.key)
+    end
+    
+    should "store all properties" do
+      foo = Foo.create :x => 'hello', :y => false
+      foo = Foo.find(foo.key)
+      assert_equal 'hello', foo.x
+      assert_equal false, foo.y
     end
   end
   
   context "save" do
     setup do
-      Remodel.redis.flushdb
+      redis.flushdb
     end
     
-    should "store the entity in redis" do
-      foo = Foo.new
-      foo.x = 42
+    should "give the entity a key, if necessary" do
+      foo = Foo.new.save
+      assert foo.key
+    end
+    
+    should "store the entity under its key" do
+      foo = Foo.new :x => 'hello', :y => false
       foo.save
-      assert 1, foo.key
-      assert Remodel.redis.get(foo.key)
+      assert redis.exists(foo.key)
+    end
+
+    should "store all properties" do
+      foo = Foo.new :x => 'hello', :y => false
+      foo.save
+      foo = Foo.find(foo.key)
+      assert_equal 'hello', foo.x
+      assert_equal false, foo.y
     end
   end
   
   context "find" do
     setup do
-      Remodel.redis.flushdb
+      redis.flushdb
       @foo = Foo.create :x => 'hello', :y => 123
     end
     
@@ -79,8 +93,7 @@ class TestEntity < Test::Unit::TestCase
 
   context "properties" do
     should "always have a property key" do
-      foo = Foo.new
-      assert foo.key.nil?
+      assert Foo.new.respond_to?(:key)
     end
     
     should "have property x" do
@@ -115,13 +128,21 @@ class TestEntity < Test::Unit::TestCase
   context "json" do
     should "serialize to json" do
       foo = Foo.new :x => 42, :y => true
-      assert_equal %q({"x":42,"y":true}), foo.to_json
+      assert_match /"x":42/, foo.to_json
+      assert_match /"y":true/, foo.to_json
     end
     
     should "create from json" do
       foo = Foo.from_json %q({"x":23,"y":false})
       assert_equal 23, foo.x
       assert_equal false, foo.y
+    end
+    
+    should "work in roundtrip" do
+      before = Foo.new :x => 42, :y => true
+      after = Foo.from_json(before.to_json)
+      assert_equal before.x, after.x
+      assert_equal before.y, after.y
     end
   end
   

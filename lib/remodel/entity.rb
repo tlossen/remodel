@@ -27,7 +27,12 @@ module Remodel
   protected
 
     def self.next_key
-      redis.incr("#{self.name}:key-sequence")
+      next_val = redis.incr("#{key_prefix}:seq")
+      "#{key_prefix}:#{next_val}"
+    end
+    
+    def self.key_prefix
+      name[0,1].downcase
     end
 
     def self.inherited(subclass)

@@ -4,5 +4,10 @@ require 'shoulda'
 
 require File.dirname(__FILE__) + '/../lib/remodel'
 
-# class Test::Unit::TestCase
-# end
+class Test::Unit::TestCase
+  
+  def redis
+    Remodel.redis
+  end
+  
+end
