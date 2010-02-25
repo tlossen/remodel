@@ -1,11 +1,14 @@
-# remodel your storage layer &mdash; use redis instead of mysql
+# remodel your storage layer
 
+use [redis](http://code.google.com/p/redis/) instead of mysql 
+to store your application data. 
 redis offers in-memory read and write performance &mdash;
-on the order of 10K to 100K operations per second, comparable
-to memcached &mdash; plus asynchronous persistence to disk.
+on the order of 10K to 100K operations per second (= comparable
+to [memcached](http://memcached.org/)) &mdash; plus asynchronous 
+persistence to disk.
 
 remodel is meant as a direct replacement for ActiveRecord and
-offers familiar syntax (like `has_many` / `belongs_to`) to build
+offers familiar syntax (`has_many`, `belongs_to` ...) to build
 your domain model in ruby.
 
 ## status
