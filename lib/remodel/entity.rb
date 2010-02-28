@@ -49,7 +49,7 @@ module Remodel
     def self.has_many(collection, options)
       clazz = options[:class]
       define_method(collection.to_sym) do
-        var = "@#{collection}".to_sym        
+        var = "@#{collection}".to_sym
         if instance_variable_defined? var
           instance_variable_get var
         else
@@ -65,6 +65,7 @@ module Remodel
     end
     
     def self.belongs_to(parent)
+      # TODO: implement this :)
       define_method(parent.to_sym) { nil }
     end
 
