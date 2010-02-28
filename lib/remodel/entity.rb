@@ -46,11 +46,16 @@ module Remodel
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
     
-    def self.has_many(children, options)
-      define_method(children.to_sym) do 
-        # TODO: caching
-        keys = redis.lrange("#{key}:#{children}", 0, -1)
-        redis.mget(keys).map { |json| options[:class].from_json(json) }
+    def self.has_many(collection, options)
+      define_method(collection.to_sym) do
+        var = "@#{collection}".to_sym        
+        if instance_variable_defined? var
+          instance_variable_get var
+        else
+          keys = redis.lrange("#{key}:#{collection}", 0, -1)
+          values = redis.mget(keys).map { |json| options[:class].from_json(json) }
+          instance_variable_set var, values
+        end
       end
     end
     
