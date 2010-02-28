@@ -1,13 +1,14 @@
 require 'helper'
 
-class Foo < Remodel::Entity
-  has_many :items
-  property :x
-  property :y
-end
-
 class Item < Remodel::Entity
   belongs_to :foo
+  property :name
+end
+
+class Foo < Remodel::Entity
+  has_many :items, :class => Item
+  property :x
+  property :y
 end
 
 class TestEntity < Test::Unit::TestCase
@@ -114,7 +115,15 @@ class TestEntity < Test::Unit::TestCase
   context "has_many" do
     should "have a getter for the children" do
       foo = Foo.create
-      assert_equal [], foo.items
+      redis.rpush "#{foo.key}:items", Item.create(:name => 'tim').key
+      redis.rpush "#{foo.key}:items", Item.create(:name => 'jan').key
+      assert_equal 2, foo.items.size
+      assert_equal Item, foo.items[0].class
+      assert_equal 'tim', foo.items[0].name
+    end
+    
+    should "have a create method on the property" do
+      # TODO
     end
   end
   

@@ -46,8 +46,12 @@ module Remodel
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
     
-    def self.has_many(children)
-      define_method(children.to_sym) { [] }
+    def self.has_many(children, options)
+      define_method(children.to_sym) do 
+        # TODO: caching
+        keys = redis.lrange("#{key}:#{children}", 0, -1)
+        redis.mget(keys).map { |json| options[:class].from_json(json) }
+      end
     end
     
     def self.belongs_to(parent)
