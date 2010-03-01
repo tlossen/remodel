@@ -1,4 +1,4 @@
-# remodel your storage layer
+# remodel your storage layer!
 
 
 ## overview
@@ -6,11 +6,11 @@
 use [redis](http://code.google.com/p/redis/) instead of mysql
 to store your application data. 
 redis offers in-memory read and write performance &mdash;
-on the order of 10K to 100K operations per second (= comparable
-to [memcached](http://memcached.org/)) &mdash; plus asynchronous 
+on the order of 10K to 100K operations per second, comparable
+to [memcached](http://memcached.org/) &mdash; plus asynchronous 
 persistence to disk.
 
-remodel is meant as a direct replacement for ActiveRecord and
+remodel (= redis model) is meant as a direct replacement for ActiveRecord and
 offers familiar syntax like `has_many`, `belongs_to` ... to build
 your domain model in ruby.
 
@@ -19,27 +19,25 @@ your domain model in ruby.
 
 1. install redis and ezras [redis-rb](http://github.com/ezmobius/redis-rb) ruby client:
 
-	brew install redis
-	gem install redis
+		brew install redis
+		gem install redis
 
 2. install the super-fast [yajl](http://github.com/lloyd/yajl) json parser plus ruby bindings:
 
-	brew install yajl
-	gem install yajl-ruby
+		brew install yajl
+		gem install yajl-ruby
 
 3. start redis, i.e.
 
-	redis-server
+		redis-server
 
 4. now the tests should run successfully
 
-	rake
+		rake
 	
-	Started
-	.....................
-	Finished in 0.011021 seconds.
-
-	21 tests, 36 assertions, 0 failures, 0 errors
+		Finished in 0.011021 seconds.
+		
+		21 tests, 36 assertions, 0 failures, 0 errors
 
 
 ## usage example
@@ -71,7 +69,7 @@ then you can do:
 ## inspired by
 
 * [how to redis](http://www.paperplanes.de/2009/10/30/how_to_redis.html) &mdash; good overview by mathias meyer
-* [hurl](http://github.com/defunkt/hurl/blob/master/models/model.rb) &mdash; basically i extracted defunkts Hurl::Model class into Remodel::Entity
+* [hurl](http://github.com/defunkt/hurl) &mdash; basically i extracted defunkts [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb) class into [Remodel::Entity](http://github.com/tlossen/remodel/blob/master/lib/remodel/entity.rb)
 * [ohm](http://github.com/soveran/ohm) &mdash; object-hash mapping for redis. somewhat similar, but uses a different mapping approach.
 
 
