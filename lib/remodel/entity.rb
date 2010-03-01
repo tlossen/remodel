@@ -50,16 +50,19 @@ module Remodel
       clazz = options[:class]
       define_method(collection.to_sym) do
         var = "@#{collection}".to_sym
-        if instance_variable_defined? var
-          instance_variable_get var
+        if instance_variable_defined?(var)
+          instance_variable_get(var)
         else
-          keys = redis.lrange("#{key}:#{collection}", 0, -1)
+          collection_key = "#{key}:#{collection}"
+          keys = redis.lrange(collection_key, 0, -1)
           values = keys.empty? ? [] : redis.mget(keys).map { |json| clazz.from_json(json) }
           eigenclass = class << values; self; end
           eigenclass.send(:define_method, :create) do |attributes|
-            self << clazz.create(attributes)
+            created = clazz.create(attributes)
+            Remodel.redis.rpush(collection_key, created.key)
+            self << created
           end
-          instance_variable_set var, values
+          instance_variable_set(var, values)
         end
       end
     end
@@ -90,7 +93,8 @@ module Remodel
     def normalize(attributes)
       result = {}
       attributes.each do |name, value|
-        result[name.to_sym] = value if self.class.properties.include? name.to_sym
+        name = name.to_sym
+        result[name] = value if self.class.properties.include? name
       end
       result
     end
