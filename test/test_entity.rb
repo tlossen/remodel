@@ -11,6 +11,10 @@ class Foo < Remodel::Entity
   property :y
 end
 
+# class Custom < Remodel::Entity
+#   set_key_prefix 'my'
+# end
+
 class TestEntity < Test::Unit::TestCase
 
   context "new" do
@@ -75,6 +79,12 @@ class TestEntity < Test::Unit::TestCase
     end
   end
   
+  # context "#set_key_prefix" do
+  #   should "use the given key prefix" do
+  #     assert_match /^my:\d+$/, Custom.create.key
+  #   end
+  # end
+  
   context "find" do
     setup do
       redis.flushdb
@@ -135,8 +145,14 @@ class TestEntity < Test::Unit::TestCase
     
       should "have a create method" do
         foo = Foo.create
+        assert foo.items.respond_to?(:create)
+      end
+      
+      should "create and store a new child" do
+        foo = Foo.create
         foo.items.create :name => 'bodo'
         foo.items.create :name => 'logo'
+        foo = Foo.find(foo.key)
         assert_equal 2, foo.items.size
         assert_equal Item, foo.items[1].class
         assert_equal 'logo', foo.items[1].name
