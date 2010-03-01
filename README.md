@@ -80,6 +80,8 @@ now you can do:
 * custom key prefixes
 * redis config
 * documentation (yardoc)
+* packaging as gem
+* benchmarks
 * `find_by` with ohm-like indexes?
 * sharding??
 
