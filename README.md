@@ -3,9 +3,8 @@
 
 ## overview
 
-use [redis](http://code.google.com/p/redis/) instead of mysql
-to store your application data. 
-redis offers in-memory read and write performance &mdash;
+use [redis](http://github.com/antirez/redis) instead of mysql to store 
+your application data. redis offers in-memory read and write performance &mdash;
 on the order of 10K to 100K operations per second, comparable
 to [memcached](http://memcached.org/) &mdash; plus asynchronous 
 persistence to disk.
@@ -17,12 +16,14 @@ your domain model in ruby.
 
 ## how to get started
 
-1. install redis and ezras [redis-rb](http://github.com/ezmobius/redis-rb) ruby client:
+1. install [redis](http://github.com/antirez/redis) and ezras 
+[redis-rb](http://github.com/ezmobius/redis-rb) ruby client:
 
 		brew install redis
 		gem install redis
 
-2. install the super-fast [yajl](http://github.com/lloyd/yajl) json parser plus ruby bindings:
+2. install the super-fast [yajl](http://github.com/lloyd/yajl) json parser 
+plus ruby bindings:
 
 		brew install yajl
 		gem install yajl-ruby
@@ -36,11 +37,10 @@ your domain model in ruby.
 		rake
 	
 		Finished in 0.011021 seconds.
-		
 		21 tests, 36 assertions, 0 failures, 0 errors
 
 
-## usage example
+## example
 
 define your domain model like this:
 
@@ -54,7 +54,7 @@ define your domain model like this:
 	  property :year
 	end
 	
-then you can do:
+now you can do:
 
 	>> book = Book.create :title => 'Moby Dick', :year => 1851
 	=> #<Book:0x11cc20c @attributes={:key=>"b:1", :year=>1851, :title=>"Moby Dick"}>
@@ -79,14 +79,14 @@ then you can do:
 * `delete`
 * custom key prefixes
 * redis config
-* ohm-like indexes?
 * documentation (yardoc)
-* sharding
+* `find_by` with ohm-like indexes?
+* sharding??
 
 
 ## status
 
-pre-alpha. play around with it at your own risk :)
+pre-alpha. play around at your own risk :)
 
 
 ## license
