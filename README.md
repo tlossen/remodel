@@ -3,10 +3,10 @@
 
 ## overview
 
-use [redis](http://github.com/antirez/redis) instead of mysql to store 
+use [redis](http://github.com/antirez/redis) instead of mysql to store
 your application data. redis offers in-memory read and write performance &mdash;
 on the order of 10K to 100K operations per second, comparable
-to [memcached](http://memcached.org/) &mdash; plus asynchronous 
+to [memcached](http://memcached.org/) &mdash; plus asynchronous
 persistence to disk.
 
 remodel (= redis model) is meant as a direct replacement for ActiveRecord and
@@ -16,13 +16,13 @@ your domain model in ruby.
 
 ## how to get started
 
-1. install [redis](http://github.com/antirez/redis) and [ezra](http://github.com/ezmobius)'s 
+1. install [redis](http://github.com/antirez/redis) and ezras excellent
 [redis-rb](http://github.com/ezmobius/redis-rb) ruby client:
 
 		brew install redis
 		gem install redis
 
-2. install the super-fast [yajl](http://github.com/lloyd/yajl) json parser 
+2. install the super-fast [yajl](http://github.com/lloyd/yajl) json parser
 plus ruby bindings:
 
 		brew install yajl
@@ -68,9 +68,14 @@ now you can do:
 
 ## inspired by
 
-* [how to redis](http://www.paperplanes.de/2009/10/30/how_to_redis.html) &mdash; good overview by [mattmatt](http://github.com/mattmatt)
-* [hurl](http://github.com/defunkt/hurl) &mdash; basically i extracted [defunkt](http://github.com/defunkt)'s [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb) class into [Remodel::Entity](http://github.com/tlossen/remodel/blob/master/lib/remodel/entity.rb)
-* [ohm](http://github.com/soveran/ohm) &mdash; object-hash mapping for redis. somewhat similar, but uses a different mapping approach.
+* [how to redis](http://www.paperplanes.de/2009/10/30/how_to_redis.html)
+&mdash; good overview of differenct mapping options by [mattmatt](http://github.com/mattmatt)
+* [hurl](http://github.com/defunkt/hurl) &mdash; basically i extracted
+defunkts [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb) class 
+into [Remodel::Entity](http://github.com/tlossen/remodel/blob/master/lib/remodel/entity.rb)
+* [ohm](http://github.com/soveran/ohm) &mdash; object-hash mapping for redis. 
+somewhat similar, althoug based on a different mapping approach: not serialization to json,
+but storing each attribute under its own key.
 
 
 ## todo
@@ -87,7 +92,7 @@ now you can do:
 
 ## status
 
-pre-alpha. play around at your own risk :)
+alpha. play around at your own risk :)
 
 
 ## license

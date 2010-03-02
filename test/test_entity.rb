@@ -123,6 +123,52 @@ class TestEntity < Test::Unit::TestCase
       assert_raise(NoMethodError) { foo.z }
       assert_raise(NoMethodError) { foo.z = 42 }
     end
+    
+    context "types" do
+      should "work with nil" do
+        foo = Foo.create :x => nil
+        foo = Foo.find(foo.key)
+        assert foo.x.nil?
+      end
+      
+      should "work with booleans" do
+        foo = Foo.create :x => false
+        foo = Foo.find(foo.key)
+        assert_equal false, foo.x
+      end
+      
+      should "work with integers" do
+        foo = Foo.create :x => 42
+        foo = Foo.find(foo.key)
+        assert_equal 42, foo.x
+      end
+      
+      should "work with floats" do
+        foo = Foo.create :x => 3.141
+        foo = Foo.find(foo.key)
+        assert_equal 3.141, foo.x
+      end
+      
+      should "work with strings" do
+        foo = Foo.create :x => 'hello'
+        foo = Foo.find(foo.key)
+        assert_equal 'hello', foo.x
+      end
+      
+      should "work with lists" do
+        foo = Foo.create :x => [1, 2, 3]
+        foo = Foo.find(foo.key)
+        assert_equal [1, 2, 3], foo.x
+      end
+      
+      should "work with hashes" do
+        hash = { 'a' => 17, 'b' => 'test' }
+        foo = Foo.create :x => hash
+        foo = Foo.find(foo.key)
+        assert_equal hash, foo.x
+      end
+    end
+    
   end
   
   context "has_many" do
