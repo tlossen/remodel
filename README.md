@@ -77,7 +77,6 @@ now you can do:
 
 * `belongs_to`
 * `delete`
-* custom key prefixes
 * redis config
 * documentation (yardoc)
 * packaging as gem

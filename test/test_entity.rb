@@ -11,10 +11,6 @@ class Foo < Remodel::Entity
   property :y
 end
 
-# class Custom < Remodel::Entity
-#   set_key_prefix 'my'
-# end
-
 class TestEntity < Test::Unit::TestCase
 
   context "new" do
@@ -79,11 +75,18 @@ class TestEntity < Test::Unit::TestCase
     end
   end
   
-  # context "#set_key_prefix" do
-  #   should "use the given key prefix" do
-  #     assert_match /^my:\d+$/, Custom.create.key
-  #   end
-  # end
+   context "#set_key_prefix" do
+     should "use the given key prefix" do
+       class Custom < Remodel::Entity; set_key_prefix 'my'; end
+       assert_match /^my:\d+$/, Custom.create.key
+     end
+     
+     should "ensure that the prefix is letters only" do
+       assert_raise(Remodel::InvalidKeyPrefix) do
+         class InvalidPrefix < Remodel::Entity; set_key_prefix '666'; end
+       end
+     end
+   end
   
   context "find" do
     setup do
@@ -97,8 +100,8 @@ class TestEntity < Test::Unit::TestCase
       assert_equal foo.y, @foo.y
     end
     
-    should "raise NotFound if the key does not exist" do
-      assert_raise(Remodel::NotFound) { Foo.find(23) }
+    should "raise EntityNotFound if the key does not exist" do
+      assert_raise(Remodel::EntityNotFound) { Foo.find(23) }
     end
   end
 

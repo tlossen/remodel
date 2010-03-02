@@ -3,7 +3,7 @@ module Remodel
   class Entity
   
     def self.find(key)
-      from_json(redis.get(key) || raise(NotFound))
+      from_json(redis.get(key) || raise(EntityNotFound))
     end
 
     def self.create(attributes = {})
@@ -32,7 +32,12 @@ module Remodel
     end
     
     def self.key_prefix
-      name[0,1].downcase
+      @key_prefix ||= name[0,1].downcase
+    end
+
+    def self.set_key_prefix(prefix)
+      raise InvalidKeyPrefix unless prefix =~ /^[a-z]+$/
+      @key_prefix = prefix
     end
 
     def self.inherited(subclass)
