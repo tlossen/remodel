@@ -16,7 +16,7 @@ your domain model in ruby.
 
 ## how to get started
 
-1. install [redis](http://github.com/antirez/redis) and ezras 
+1. install [redis](http://github.com/antirez/redis) and [ezra](http://github.com/ezmobius)'s 
 [redis-rb](http://github.com/ezmobius/redis-rb) ruby client:
 
 		brew install redis
@@ -68,8 +68,8 @@ now you can do:
 
 ## inspired by
 
-* [how to redis](http://www.paperplanes.de/2009/10/30/how_to_redis.html) &mdash; good overview by mathias meyer
-* [hurl](http://github.com/defunkt/hurl) &mdash; basically i extracted defunkts [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb) class into [Remodel::Entity](http://github.com/tlossen/remodel/blob/master/lib/remodel/entity.rb)
+* [how to redis](http://www.paperplanes.de/2009/10/30/how_to_redis.html) &mdash; good overview by [mattmatt](http://github.com/mattmatt)
+* [hurl](http://github.com/defunkt/hurl) &mdash; basically i extracted [defunkt](http://github.com/defunkt)'s [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb) class into [Remodel::Entity](http://github.com/tlossen/remodel/blob/master/lib/remodel/entity.rb)
 * [ohm](http://github.com/soveran/ohm) &mdash; object-hash mapping for redis. somewhat similar, but uses a different mapping approach.
 
 
