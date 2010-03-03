@@ -26,6 +26,24 @@ class TestEntity < Test::Unit::TestCase
     end
   end
   
+  context "reload" do
+    should "reload all properties" do
+      foo = Foo.create :x => 'hello', :y => true
+      redis.set foo.key, %q({"x":23,"y":"adios"})
+      foo.reload
+      assert_equal 23, foo.x
+      assert_equal 'adios', foo.y
+    end
+    
+    should "reload all collections" do
+      foo = Foo.create
+      item = foo.items.create :name => 'bar'
+      redis.del "#{foo.key}:items"
+      foo.reload
+      assert_equal [], foo.items
+    end
+  end
+  
   context "create" do
     setup do
       redis.flushdb
@@ -44,7 +62,7 @@ class TestEntity < Test::Unit::TestCase
     
     should "store all properties" do
       foo = Foo.create :x => 'hello', :y => false
-      foo = Foo.find(foo.key)
+      foo.reload
       assert_equal 'hello', foo.x
       assert_equal false, foo.y
     end
@@ -69,7 +87,7 @@ class TestEntity < Test::Unit::TestCase
     should "store all properties" do
       foo = Foo.new :x => 'hello', :y => false
       foo.save
-      foo = Foo.find(foo.key)
+      foo.reload
       assert_equal 'hello', foo.x
       assert_equal false, foo.y
     end
@@ -127,45 +145,38 @@ class TestEntity < Test::Unit::TestCase
     context "types" do
       should "work with nil" do
         foo = Foo.create :x => nil
-        foo = Foo.find(foo.key)
-        assert foo.x.nil?
+        assert_equal nil, foo.reload.x
       end
       
       should "work with booleans" do
         foo = Foo.create :x => false
-        foo = Foo.find(foo.key)
-        assert_equal false, foo.x
+        assert_equal false, foo.reload.x
       end
       
       should "work with integers" do
         foo = Foo.create :x => -42
-        foo = Foo.find(foo.key)
-        assert_equal -42, foo.x
+        assert_equal -42, foo.reload.x
       end
       
       should "work with floats" do
         foo = Foo.create :x => 3.141
-        foo = Foo.find(foo.key)
-        assert_equal 3.141, foo.x
+        assert_equal 3.141, foo.reload.x
       end
       
       should "work with strings" do
         foo = Foo.create :x => 'hello'
-        foo = Foo.find(foo.key)
-        assert_equal 'hello', foo.x
+        assert_equal 'hello', foo.reload.x
       end
 
       should "work with lists" do
         foo = Foo.create :x => [1, 2, 3]
-        foo = Foo.find(foo.key)
-        assert_equal [1, 2, 3], foo.x
+        assert_equal [1, 2, 3], foo.reload.x
       end
       
       should "work with hashes" do
         hash = { 'a' => 17, 'b' => 'test' }
         foo = Foo.create :x => hash
-        foo = Foo.find(foo.key)
-        assert_equal hash, foo.x
+        assert_equal hash, foo.reload.x
       end
     end
     
@@ -192,19 +203,22 @@ class TestEntity < Test::Unit::TestCase
         assert_equal 'tim', foo.items[0].name
       end
     
-      should "have a create method" do
-        foo = Foo.create
-        assert foo.items.respond_to?(:create)
-      end
+      context "create" do
+        should "have a create method" do
+          foo = Foo.create
+          assert foo.items.respond_to?(:create)
+        end
       
-      should "create and store a new child" do
-        foo = Foo.create
-        foo.items.create :name => 'bodo'
-        foo.items.create :name => 'logo'
-        foo = Foo.find(foo.key)
-        assert_equal 2, foo.items.size
-        assert_equal Item, foo.items[1].class
-        assert_equal 'logo', foo.items[1].name
+        should "create and store a new child" do
+          foo = Foo.create
+          foo.items.create :name => 'bodo'
+          foo.items.create :name => 'logo'
+          assert_equal 2, foo.items.size
+          foo.reload
+          assert_equal 2, foo.items.size
+          assert_equal Item, foo.items[1].class
+          assert_equal 'logo', foo.items[1].name
+        end
       end
     end
   end

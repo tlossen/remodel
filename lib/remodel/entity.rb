@@ -11,15 +11,21 @@ module Remodel
     end
   
     def initialize(attributes = {})
-      @attributes = normalize(attributes)
+      @attributes = self.class.normalize(attributes)
     end
   
+    def reload
+      initialize(self.class.parse(redis.get(key)))
+      reset_collections
+      self
+    end
+
     def save
       self.key = self.class.next_key if key.nil?
       redis.set(key, to_json)
       self
     end
-
+    
     def to_json
       Yajl::Encoder.encode(@attributes)
     end
@@ -52,12 +58,14 @@ module Remodel
     end
     
     def self.has_many(collection, options)
-      clazz = options[:class]
-      define_method(collection.to_sym) do
+      collection = collection.to_sym
+      collections << collection
+      define_method(collection) do
         var = "@#{collection}".to_sym
         if instance_variable_defined?(var)
           instance_variable_get(var)
         else
+          clazz = options[:class]
           collection_key = "#{key}:#{collection}"
           keys = redis.lrange(collection_key, 0, -1)
           values = keys.empty? ? [] : redis.mget(keys).map { |json| clazz.from_json(json) }
@@ -87,19 +95,34 @@ module Remodel
   
   private
   
+    def reset_collections
+      self.class.collections.each do |collection| 
+        var = "@#{collection}".to_sym
+        remove_instance_variable(var) if instance_variable_defined?(var)
+      end
+    end
+  
     def self.properties
       @properties ||= Set.new
     end
-
-    def self.from_json(json)
-      new(Yajl::Parser.parse(json))
+    
+    def self.collections
+      @collections ||= Set.new
     end
 
-    def normalize(attributes)
+    def self.from_json(json)
+      new(parse(json))
+    end
+    
+    def self.parse(json)
+      Yajl::Parser.parse(json)
+    end
+
+    def self.normalize(attributes)
       result = {}
       attributes.each do |name, value|
         name = name.to_sym
-        result[name] = value if self.class.properties.include? name
+        result[name] = value if properties.include? name
       end
       result
     end
