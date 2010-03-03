@@ -138,9 +138,9 @@ class TestEntity < Test::Unit::TestCase
       end
       
       should "work with integers" do
-        foo = Foo.create :x => 42
+        foo = Foo.create :x => -42
         foo = Foo.find(foo.key)
-        assert_equal 42, foo.x
+        assert_equal -42, foo.x
       end
       
       should "work with floats" do
@@ -154,7 +154,7 @@ class TestEntity < Test::Unit::TestCase
         foo = Foo.find(foo.key)
         assert_equal 'hello', foo.x
       end
-      
+
       should "work with lists" do
         foo = Foo.create :x => [1, 2, 3]
         foo = Foo.find(foo.key)

@@ -3,15 +3,21 @@
 
 ## overview
 
-use [redis](http://github.com/antirez/redis) instead of mysql to store
-your application data. redis offers in-memory read and write performance &mdash;
-on the order of 10K to 100K operations per second, comparable
-to [memcached](http://memcached.org/) &mdash; plus asynchronous
-persistence to disk.
-
+use [redis](http://github.com/antirez/redis) instead of mysql to store your application data.
 remodel (= redis model) is meant as a direct replacement for ActiveRecord and
-offers familiar syntax like `has_many`, `belongs_to` ... to build
-your domain model in ruby.
+offers familiar syntax like `has_many`, `belongs_to` etc. to build your domain model in ruby.
+
+redis offers in-memory read and write performance &mdash; on the order of 10K to 100K 
+operations per second, comparable to [memcached](http://memcached.org/) &mdash; plus asynchronous
+persistence to disk. for example, on my macbook (2 Ghz):
+
+	$ redis-benchmark -d 100 -r 10000 -q
+	SET: 13864.27 requests per second
+	GET: 18152.17 requests per second
+	INCR: 17006.80 requests per second
+	LPUSH: 17243.99 requests per second
+	LPOP: 18706.54 requests per second
+
 
 
 ## how to get started
@@ -19,23 +25,22 @@ your domain model in ruby.
 1. install [redis](http://github.com/antirez/redis) and ezras excellent
 [redis-rb](http://github.com/ezmobius/redis-rb) ruby client:
 
-		brew install redis
-		gem install redis
+		$ brew install redis
+		$ gem install redis
 
 2. install the super-fast [yajl](http://github.com/lloyd/yajl) json parser
 plus ruby bindings:
 
-		brew install yajl
-		gem install yajl-ruby
+		$ brew install yajl
+		$ gem install yajl-ruby
 
 3. start redis, i.e.
 
-		redis-server
+		$ redis-server
 
 4. now the tests should run successfully
 
-		rake
-	
+		$ rake
 		Finished in 0.011021 seconds.
 		21 tests, 36 assertions, 0 failures, 0 errors
 
