@@ -5,7 +5,6 @@ class Puzzle < Remodel::Entity
 end
 
 class Piece < Remodel::Entity
-  belongs_to :puzzle
   property :color
 end
 
@@ -37,6 +36,12 @@ class TestEntity < Test::Unit::TestCase
           puzzle = Puzzle.create
           assert puzzle.pieces.respond_to?(:create)
         end
+        
+        should "work without attributes" do
+          puzzle = Puzzle.create
+          piece = puzzle.pieces.create
+          assert piece.is_a? Piece
+        end
       
         should "create and store a new child" do
           puzzle = Puzzle.create
@@ -49,13 +54,6 @@ class TestEntity < Test::Unit::TestCase
           assert_equal 'yellow', puzzle.pieces[1].color
         end
       end
-    end
-  end
-  
-  context "belongs_to" do
-    should "have a getter for the parent" do
-      piece = Piece.create
-      assert piece.puzzle.nil?
     end
   end
   

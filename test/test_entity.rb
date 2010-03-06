@@ -37,6 +37,11 @@ class TestEntity < Test::Unit::TestCase
       redis.flushdb
     end
     
+    should "work without attributes" do
+      foo = Foo.create
+      assert foo.is_a? Foo
+    end
+    
     should "give the entity a key based on the class name" do
       assert_equal 'f:1', Foo.create.key
       assert_equal 'b:1', Bar.create.key

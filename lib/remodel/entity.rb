@@ -65,27 +65,15 @@ module Remodel
         if instance_variable_defined?(var)
           instance_variable_get(var)
         else
-          clazz = options[:class]
-          clazz = Kernel.const_get(clazz) unless clazz.is_a? Class
+          clazz = Kernel.const_get(options[:class].to_s) # accepts String, Symbol or Class
           collection_key = "#{key}:#{collection}"
           keys = redis.lrange(collection_key, 0, -1)
           values = keys.empty? ? [] : redis.mget(keys).map { |json| clazz.from_json(json) }
-          eigenclass = class << values; self; end
-          eigenclass.send(:define_method, :create) do |attributes|
-            created = clazz.create(attributes)
-            Remodel.redis.rpush(collection_key, created.key)
-            self << created
-          end
-          instance_variable_set(var, values)
+          instance_variable_set(var, Collection.new(values, clazz, collection_key))
         end
       end
     end
-    
-    def self.belongs_to(parent)
-      # TODO: implement this :)
-      define_method(parent.to_sym) { nil }
-    end
-
+          
     def self.redis
       Remodel.redis
     end
