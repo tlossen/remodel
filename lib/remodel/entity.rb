@@ -66,6 +66,7 @@ module Remodel
           instance_variable_get(var)
         else
           clazz = options[:class]
+          clazz = Kernel.const_get(clazz) unless clazz.is_a? Class
           collection_key = "#{key}:#{collection}"
           keys = redis.lrange(collection_key, 0, -1)
           values = keys.empty? ? [] : redis.mget(keys).map { |json| clazz.from_json(json) }

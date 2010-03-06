@@ -1,14 +1,14 @@
 require 'helper'
 
+class Foo < Remodel::Entity
+  has_many :items, :class => 'Item'
+  property :x
+  property :y
+end
+
 class Item < Remodel::Entity
   belongs_to :foo
   property :name
-end
-
-class Foo < Remodel::Entity
-  has_many :items, :class => Item
-  property :x
-  property :y
 end
 
 class TestEntity < Test::Unit::TestCase
