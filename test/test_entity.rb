@@ -1,15 +1,11 @@
 require 'helper'
 
 class Foo < Remodel::Entity
-  has_many :items, :class => 'Item'
   property :x
   property :y
 end
 
-class Item < Remodel::Entity
-  belongs_to :foo
-  property :name
-end
+class Bar < Remodel::Entity; end
 
 class TestEntity < Test::Unit::TestCase
 
@@ -34,14 +30,6 @@ class TestEntity < Test::Unit::TestCase
       assert_equal 23, foo.x
       assert_equal 'adios', foo.y
     end
-    
-    should "reload all collections" do
-      foo = Foo.create
-      item = foo.items.create :name => 'bar'
-      redis.del "#{foo.key}:items"
-      foo.reload
-      assert_equal [], foo.items
-    end
   end
   
   context "create" do
@@ -51,8 +39,8 @@ class TestEntity < Test::Unit::TestCase
     
     should "give the entity a key based on the class name" do
       assert_equal 'f:1', Foo.create.key
-      assert_equal 'i:1', Item.create.key
-      assert_equal 'i:2', Item.create.key
+      assert_equal 'b:1', Bar.create.key
+      assert_equal 'b:2', Bar.create.key
     end
     
     should "store the entity under its key" do

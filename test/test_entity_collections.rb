@@ -1,14 +1,12 @@
 require 'helper'
 
-class Foo < Remodel::Entity
-  has_many :items, :class => 'Item'
-  property :x
-  property :y
+class Puzzle < Remodel::Entity
+  has_many :pieces, :class => 'Piece'
 end
 
-class Item < Remodel::Entity
-  belongs_to :foo
-  property :name
+class Piece < Remodel::Entity
+  belongs_to :puzzle
+  property :color
 end
 
 class TestEntity < Test::Unit::TestCase
@@ -16,39 +14,39 @@ class TestEntity < Test::Unit::TestCase
   context "has_many" do
     context "collection property" do
       should "exist" do
-        foo = Foo.create
-        assert foo.respond_to?(:items)
+        puzzle = Puzzle.create
+        assert puzzle.respond_to?(:pieces)
       end
     
       should "return an empty list by default" do
-        foo = Foo.create
-        assert_equal [], foo.items
+        puzzle = Puzzle.create
+        assert_equal [], puzzle.pieces
       end
     
       should "return any existing children" do
-        foo = Foo.create
-        redis.rpush "#{foo.key}:items", Item.create(:name => 'tim').key
-        redis.rpush "#{foo.key}:items", Item.create(:name => 'jan').key
-        assert_equal 2, foo.items.size
-        assert_equal Item, foo.items[0].class
-        assert_equal 'tim', foo.items[0].name
+        puzzle = Puzzle.create
+        redis.rpush "#{puzzle.key}:pieces", Piece.create(:color => 'red').key
+        redis.rpush "#{puzzle.key}:pieces", Piece.create(:color => 'blue').key
+        assert_equal 2, puzzle.pieces.size
+        assert_equal Piece, puzzle.pieces[0].class
+        assert_equal 'red', puzzle.pieces[0].color
       end
     
       context "create" do
         should "have a create method" do
-          foo = Foo.create
-          assert foo.items.respond_to?(:create)
+          puzzle = Puzzle.create
+          assert puzzle.pieces.respond_to?(:create)
         end
       
         should "create and store a new child" do
-          foo = Foo.create
-          foo.items.create :name => 'bodo'
-          foo.items.create :name => 'logo'
-          assert_equal 2, foo.items.size
-          foo.reload
-          assert_equal 2, foo.items.size
-          assert_equal Item, foo.items[1].class
-          assert_equal 'logo', foo.items[1].name
+          puzzle = Puzzle.create
+          puzzle.pieces.create :color => 'green'
+          puzzle.pieces.create :color => 'yellow'
+          assert_equal 2, puzzle.pieces.size
+          puzzle.reload
+          assert_equal 2, puzzle.pieces.size
+          assert_equal Piece, puzzle.pieces[1].class
+          assert_equal 'yellow', puzzle.pieces[1].color
         end
       end
     end
@@ -56,9 +54,20 @@ class TestEntity < Test::Unit::TestCase
   
   context "belongs_to" do
     should "have a getter for the parent" do
-      item = Item.create
-      assert item.foo.nil?
+      piece = Piece.create
+      assert piece.puzzle.nil?
     end
   end
+  
+  context "reload" do
+    should "reload all collections" do
+      puzzle = Puzzle.create
+      piece = puzzle.pieces.create :color => 'black'
+      redis.del "#{puzzle.key}:pieces"
+      puzzle.reload
+      assert_equal [], puzzle.pieces
+    end
+  end
+  
   
 end
