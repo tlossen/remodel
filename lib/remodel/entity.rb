@@ -3,19 +3,23 @@ module Remodel
   class Entity
   
     def initialize(attributes = {})
-      @attributes = self.class.normalize(attributes)
+      @attributes = normalize(attributes)
     end
   
     def self.create(attributes = {})
       new(attributes).save
     end
   
+    def self.from_json(json)
+      new(parse(json))
+    end
+    
     def self.find(key)
       from_json(redis.get(key) || raise(EntityNotFound))
     end
 
     def reload
-      initialize(self.class.parse(redis.get(key)))
+      initialize(self.class.parse(redis.get(key) || raise(EntityNotFound)))
       reset_collections
       self
     end
@@ -30,24 +34,15 @@ module Remodel
       Yajl::Encoder.encode(@attributes)
     end
 
-  protected
+    def self.parse(json)
+      Yajl::Parser.parse(json)
+    end
 
-    def self.next_key
-      next_val = redis.incr("#{key_prefix}:seq")
-      "#{key_prefix}:#{next_val}"
-    end
-    
-    def self.key_prefix
-      @key_prefix ||= name[0,1].downcase
-    end
+  protected
 
     def self.set_key_prefix(prefix)
       raise InvalidKeyPrefix unless prefix =~ /^[a-z]+$/
       @key_prefix = prefix
-    end
-
-    def self.inherited(subclass)
-      subclass.property(:key)
     end
 
     def self.property(name)
@@ -69,41 +64,46 @@ module Remodel
       end
     end
           
-    def self.redis
-      Remodel.redis
-    end
-  
-    def redis
-      Remodel.redis
-    end
-  
   private
   
+    def self.inherited(subclass)
+      subclass.property(:key)
+    end
+
     def reset_collections
       instance_variables.each do |var|
         remove_instance_variable(var) if var =~ /^@collection_/
       end
     end
   
+    def normalize(attributes)
+      result = {}
+      attributes.each do |name, value|
+        name = name.to_sym
+        result[name] = value if self.class.properties.include? name
+      end
+      result
+    end
+  
+    def self.next_key
+      next_val = redis.incr("#{key_prefix}:seq")
+      "#{key_prefix}:#{next_val}"
+    end
+  
+    def self.key_prefix
+      @key_prefix ||= name[0,1].downcase
+    end
+  
     def self.properties
       @properties ||= Set.new
     end
     
-    def self.from_json(json)
-      new(parse(json))
+    def self.redis
+      Remodel.redis
     end
-    
-    def self.parse(json)
-      Yajl::Parser.parse(json)
-    end
-
-    def self.normalize(attributes)
-      result = {}
-      attributes.each do |name, value|
-        name = name.to_sym
-        result[name] = value if properties.include? name
-      end
-      result
+  
+    def redis
+      Remodel.redis
     end
   
   end
