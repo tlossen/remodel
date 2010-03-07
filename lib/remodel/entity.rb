@@ -2,18 +2,18 @@ module Remodel
 
   class Entity
   
-    def self.find(key)
-      from_json(redis.get(key) || raise(EntityNotFound))
-    end
-
-    def self.create(attributes = {})
-      new(attributes).save
-    end
-  
     def initialize(attributes = {})
       @attributes = self.class.normalize(attributes)
     end
   
+    def self.create(attributes = {})
+      new(attributes).save
+    end
+  
+    def self.find(key)
+      from_json(redis.get(key) || raise(EntityNotFound))
+    end
+
     def reload
       initialize(self.class.parse(redis.get(key)))
       reset_collections
@@ -59,9 +59,8 @@ module Remodel
     
     def self.has_many(name, options)
       name = name.to_sym
-      collections << name
       define_method(name) do
-        var = "@#{name}".to_sym
+        var = "@collection_#{name}".to_sym
         if instance_variable_defined? var
           instance_variable_get var
         else
@@ -81,9 +80,8 @@ module Remodel
   private
   
     def reset_collections
-      self.class.collections.each do |collection| 
-        var = "@#{collection}".to_sym
-        remove_instance_variable(var) if instance_variable_defined?(var)
+      instance_variables.each do |var|
+        remove_instance_variable(var) if var =~ /^@collection_/
       end
     end
   
@@ -91,10 +89,6 @@ module Remodel
       @properties ||= Set.new
     end
     
-    def self.collections
-      @collections ||= Set.new
-    end
-
     def self.from_json(json)
       new(parse(json))
     end
