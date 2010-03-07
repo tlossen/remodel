@@ -10,9 +10,8 @@ module Remodel
     end
     
     def create(attributes = {})
-      created = @clazz.create(attributes)
+      self << created = @clazz.create(attributes)
       redis.rpush(@key, created.key)
-      self << created
       created
     end
 
@@ -20,7 +19,7 @@ module Remodel
   
     def fetch(clazz, key)
       keys = redis.lrange(key, 0, -1)
-      keys.empty? ? [] : redis.mget(keys).map { |json| clazz.from_json(json) }      
+      keys.empty? ? [] : redis.mget(keys).map { |json| clazz.from_json(json) }
     end
     
     def redis

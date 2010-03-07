@@ -1,3 +1,6 @@
+require 'yajl'
+require 'set'
+
 module Remodel
 
   class Entity
@@ -15,13 +18,7 @@ module Remodel
     end
     
     def self.find(key)
-      from_json(redis.get(key) || raise(EntityNotFound))
-    end
-
-    def reload
-      initialize(self.class.parse(redis.get(key) || raise(EntityNotFound)))
-      reset_collections
-      self
+      from_json(fetch(key))
     end
 
     def save
@@ -30,6 +27,12 @@ module Remodel
       self
     end
     
+    def reload
+      initialize(self.class.parse(self.class.fetch(key)))
+      reset_collections
+      self
+    end
+
     def to_json
       Yajl::Encoder.encode(@attributes)
     end
@@ -83,6 +86,10 @@ module Remodel
         result[name] = value if self.class.properties.include? name
       end
       result
+    end
+    
+    def self.fetch(key)
+      redis.get(key) || raise(EntityNotFound)
     end
   
     def self.next_key
