@@ -2,19 +2,31 @@ module Remodel
 
   class Collection < Array
     
-    def initialize(elements, clazz, key)
-      super(elements)
+    def initialize(clazz, key)
+      clazz = Kernel.const_get(clazz.to_s) # accepts String, Symbol or Class
+      super fetch(clazz, key)
       @clazz = clazz
       @key = key
     end
     
     def create(attributes = {})
       created = @clazz.create(attributes)
-      Remodel.redis.rpush(@key, created.key)
+      redis.rpush(@key, created.key)
       self << created
       created
     end
+
+  private
+  
+    def fetch(clazz, key)
+      keys = redis.lrange(key, 0, -1)
+      keys.empty? ? [] : redis.mget(keys).map { |json| clazz.from_json(json) }      
+    end
     
+    def redis
+      Remodel.redis
+    end
+
   end
 
 end

@@ -57,19 +57,15 @@ module Remodel
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
     
-    def self.has_many(collection, options)
-      collection = collection.to_sym
-      collections << collection
-      define_method(collection) do
-        var = "@#{collection}".to_sym
-        if instance_variable_defined?(var)
-          instance_variable_get(var)
+    def self.has_many(name, options)
+      name = name.to_sym
+      collections << name
+      define_method(name) do
+        var = "@#{name}".to_sym
+        if instance_variable_defined? var
+          instance_variable_get var
         else
-          clazz = Kernel.const_get(options[:class].to_s) # accepts String, Symbol or Class
-          collection_key = "#{key}:#{collection}"
-          keys = redis.lrange(collection_key, 0, -1)
-          values = keys.empty? ? [] : redis.mget(keys).map { |json| clazz.from_json(json) }
-          instance_variable_set(var, Collection.new(values, clazz, collection_key))
+          instance_variable_set var, Collection.new(options[:class], "#{key}:#{name}")
         end
       end
     end
