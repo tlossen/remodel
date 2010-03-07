@@ -40,7 +40,7 @@ class TestEntity < Test::Unit::TestCase
         should "work without attributes" do
           puzzle = Puzzle.create
           piece = puzzle.pieces.create
-          assert piece.is_a? Piece
+          assert piece.is_a?(Piece)
         end
       
         should "create and store a new child" do

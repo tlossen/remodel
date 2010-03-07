@@ -39,7 +39,7 @@ class TestEntity < Test::Unit::TestCase
     
     should "work without attributes" do
       foo = Foo.create
-      assert foo.is_a? Foo
+      assert foo.is_a?(Foo)
     end
     
     should "give the entity a key based on the class name" do
@@ -172,7 +172,6 @@ class TestEntity < Test::Unit::TestCase
         assert_equal hash, foo.reload.x
       end
     end
-    
   end
   
   context "json" do

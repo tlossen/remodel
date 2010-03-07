@@ -5,8 +5,15 @@ module Remodel
 
   class Entity
   
-    def initialize(attributes = {})
-      @attributes = normalize(attributes)
+    def initialize(attributes = {}, mapped = true)
+      @attributes = {}
+      attributes.each do |key, value| 
+        if mapped
+          send("#{key}=", value) if respond_to? "#{key}="
+        else
+          @attributes[key.to_sym] = value
+        end
+      end
     end
   
     def self.create(attributes = {})
@@ -14,7 +21,7 @@ module Remodel
     end
   
     def self.from_json(json)
-      new(parse(json))
+      new(parse(json), false)
     end
     
     def self.find(key)
@@ -28,7 +35,7 @@ module Remodel
     end
     
     def reload
-      initialize(self.class.parse(self.class.fetch(key)))
+      initialize(self.class.parse(self.class.fetch(key)), false)
       reset_collections
       self
     end
@@ -48,11 +55,12 @@ module Remodel
       @key_prefix = prefix
     end
 
-    def self.property(name)
+    def self.property(name, options = {})
       name = name.to_sym
       properties << name
-      define_method(name) { @attributes[name] }
-      define_method("#{name}=") { |value| @attributes[name] = value }
+      mapper = options[:mapper] || DefaultMapper
+      define_method(name) { mapper.unpack(@attributes[name]) }
+      define_method("#{name}=") { |value| @attributes[name] = mapper.pack(value) }
     end
     
     def self.has_many(name, options)
@@ -79,15 +87,6 @@ module Remodel
       end
     end
   
-    def normalize(attributes)
-      result = {}
-      attributes.each do |name, value|
-        name = name.to_sym
-        result[name] = value if self.class.properties.include? name
-      end
-      result
-    end
-    
     def self.fetch(key)
       redis.get(key) || raise(EntityNotFound)
     end
