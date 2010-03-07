@@ -20,8 +20,14 @@ module Remodel
     end
   end
 
-  def self.redis
-    @redis ||= Redis.new
+  class DateMapper
+    def self.pack(value)
+      value.to_s
+    end
+    
+    def self.unpack(value)
+      Date.parse(value)
+    end
   end
-  
+
 end
