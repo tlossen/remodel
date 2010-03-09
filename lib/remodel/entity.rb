@@ -4,7 +4,7 @@ require 'set'
 module Remodel
 
   class Entity
-  
+    
     def initialize(attributes = {})
       @attributes = {}
       attributes.each do |key, value| 
@@ -26,13 +26,15 @@ module Remodel
 
     def save
       self.key = self.class.next_key if key.nil?
-      redis.set(key, to_json)
+      self.class.redis.set(key, to_json)
       self
     end
     
     def reload
       initialize(self.class.parse(self.class.fetch(key)))
-      reset_collections
+      instance_variables.each do |var|
+        remove_instance_variable(var) if var =~ /^@collection_/
+      end
       self
     end
 
@@ -76,12 +78,6 @@ module Remodel
       subclass.property(:key)
     end
 
-    def reset_collections
-      instance_variables.each do |var|
-        remove_instance_variable(var) if var =~ /^@collection_/
-      end
-    end
-  
     def self.fetch(key)
       redis.get(key) || raise(EntityNotFound)
     end
@@ -117,10 +113,6 @@ module Remodel
     end
     
     def self.redis
-      Remodel.redis
-    end
-  
-    def redis
       Remodel.redis
     end
   
