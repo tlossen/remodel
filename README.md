@@ -49,18 +49,20 @@ plus ruby bindings:
 
 define your domain model like this:
 
+	class Book < Remodel::Entity
+	  has_many :chapters, :class => 'Chapter'
+	  property :title
+	  property :year
+	end
+
 	class Chapter < Remodel::Entity
 	  property :title
 	end
 	
-	class Book < Remodel::Entity
-	  has_many :chapters, :class => Chapter
-	  property :title
-	  property :year
-	end
-	
 now you can do:
 
+	>> require 'example/book'
+	=> true
 	>> book = Book.create :title => 'Moby Dick', :year => 1851
 	=> #<Book:0x11cc20c @attributes={:key=>"b:1", :year=>1851, :title=>"Moby Dick"}>
 	>> book.key
@@ -79,8 +81,8 @@ now you can do:
 defunkts [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb) class 
 into [Remodel::Entity](http://github.com/tlossen/remodel/blob/master/lib/remodel/entity.rb)
 * [ohm](http://github.com/soveran/ohm) &mdash; object-hash mapping for redis. 
-somewhat similar, althoug based on a different mapping approach: not serialization to json,
-but storing each attribute under its own key.
+somewhat similar, although based on a different mapping approach: instead of serializing to json,
+stores each attribute under its own key.
 
 
 ## todo
@@ -88,10 +90,11 @@ but storing each attribute under its own key.
 * `belongs_to`
 * `delete`
 * redis config
-* documentation (yardoc)
-* packaging as gem
+* documentation (yardoc and/or [rocco](http://github.com/rtomayko/rocco))
+* package as gem
 * benchmarks
-* `find_by` with ohm-like indexes?
+* use redis hashes (once they are supported)
+* `find_by` with ohm-like indexes
 * sharding??
 
 
