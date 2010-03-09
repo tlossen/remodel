@@ -12,6 +12,11 @@ class TestMappers < Test::Unit::TestCase
       @item = Item.create :time => Time.at(1234567890), :date => Date.parse("1972-06-16")
     end
     
+    should "store unmapped values" do
+      assert_equal Time, @item.instance_eval { @attributes[:time].class }
+      assert_equal Date, @item.instance_eval { @attributes[:date].class }
+    end
+    
     should "not change mapped values" do
       assert_equal Time.at(1234567890), @item.time
       assert_equal Date.parse("1972-06-16"), @item.date

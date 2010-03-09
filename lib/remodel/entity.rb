@@ -5,14 +5,10 @@ module Remodel
 
   class Entity
   
-    def initialize(attributes = {}, mapped = true)
+    def initialize(attributes = {})
       @attributes = {}
       attributes.each do |key, value| 
-        if mapped
-          send("#{key}=", value) if respond_to? "#{key}="
-        else
-          @attributes[key.to_sym] = value
-        end
+        send("#{key}=", value) if respond_to? "#{key}="
       end
     end
   
@@ -21,7 +17,7 @@ module Remodel
     end
   
     def self.from_json(json)
-      new(parse(json), false)
+      new(parse(json))
     end
     
     def self.find(key)
@@ -35,19 +31,19 @@ module Remodel
     end
     
     def reload
-      initialize(self.class.parse(self.class.fetch(key)), false)
+      initialize(self.class.parse(self.class.fetch(key)))
       reset_collections
       self
     end
 
     def to_json
-      Yajl::Encoder.encode(@attributes)
+      Yajl::Encoder.encode(self.class.pack(@attributes))
     end
 
     def self.parse(json)
-      Yajl::Parser.parse(json)
+      unpack(Yajl::Parser.parse(json))
     end
-
+    
   protected
 
     def self.set_key_prefix(prefix)
@@ -57,10 +53,9 @@ module Remodel
 
     def self.property(name, options = {})
       name = name.to_sym
-      properties << name
-      mapper = options[:mapper] || DefaultMapper
-      define_method(name) { mapper.unpack(@attributes[name]) }
-      define_method("#{name}=") { |value| @attributes[name] = mapper.pack(value) }
+      mapper[name] = options[:mapper] || DefaultMapper
+      define_method(name) { @attributes[name] }
+      define_method("#{name}=") { |value| @attributes[name] = value }
     end
     
     def self.has_many(name, options)
@@ -99,9 +94,26 @@ module Remodel
     def self.key_prefix
       @key_prefix ||= name[0,1].downcase
     end
+    
+    def self.pack(attributes)
+      result = {}
+      attributes.each do |key, value|
+        result[key] = mapper[key].pack(value)
+      end
+      result
+    end
+    
+    def self.unpack(attributes)
+      result = {}
+      attributes.each do |key, value|
+        key = key.to_sym
+        result[key] = mapper[key].unpack(value)
+      end
+      result
+    end
   
-    def self.properties
-      @properties ||= Set.new
+    def self.mapper
+      @mapper ||= {}
     end
     
     def self.redis
