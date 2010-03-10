@@ -15,21 +15,21 @@ module Remodel
       @key
     end
   
-    def reload
-      raise EntityNotSaved unless @key
-      initialize(self.class.parse(self.class.fetch(key)))
-      instance_variables.each do |var|
-        remove_instance_variable(var) if var =~ /^@collection_/
-      end
-      self
-    end
-
     def save
       @key = self.class.next_key unless @key
       self.class.redis.set(@key, to_json)
       self
     end
     
+    def reload
+      raise EntityNotSaved unless @key
+      initialize(self.class.parse(self.class.fetch(@key)))
+      instance_variables.each do |var|
+        remove_instance_variable(var) if var =~ /^@collection_/
+      end
+      self
+    end
+
     def to_json
       Yajl::Encoder.encode(self.class.pack(@attributes))
     end
