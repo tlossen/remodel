@@ -41,8 +41,8 @@ plus ruby bindings:
 4. now the tests should run successfully
 
 		$ rake
-		Finished in 0.011021 seconds.
-		21 tests, 36 assertions, 0 failures, 0 errors
+		Finished in 0.025785 seconds.
+		39 tests, 60 assertions, 0 failures, 0 errors
 
 
 ## example
