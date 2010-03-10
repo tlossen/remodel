@@ -8,18 +8,17 @@ class Piece < Remodel::Entity
   property :color
 end
 
-class TestEntity < Test::Unit::TestCase
+class TestEntityCollections < Test::Unit::TestCase
 
   context "has_many" do
+    
     context "collection property" do
       should "exist" do
-        puzzle = Puzzle.create
-        assert puzzle.respond_to?(:pieces)
+        assert Puzzle.create.respond_to?(:pieces)
       end
     
       should "return an empty list by default" do
-        puzzle = Puzzle.create
-        assert_equal [], puzzle.pieces
+        assert_equal [], Puzzle.create.pieces
       end
     
       should "return any existing children" do
@@ -33,8 +32,7 @@ class TestEntity < Test::Unit::TestCase
     
       context "create" do
         should "have a create method" do
-          puzzle = Puzzle.create
-          assert puzzle.pieces.respond_to?(:create)
+          assert Puzzle.create.pieces.respond_to?(:create)
         end
         
         should "work without attributes" do
@@ -66,6 +64,5 @@ class TestEntity < Test::Unit::TestCase
       assert_equal [], puzzle.pieces
     end
   end
-  
   
 end

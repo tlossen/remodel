@@ -36,6 +36,10 @@ class TestEntity < Test::Unit::TestCase
       redis.del foo.key
       assert_raise(Remodel::EntityNotFound) { foo.reload }
     end
+    
+    should "raise EntityNotSaved if the entity was never saved" do
+      assert_raise(Remodel::EntityNotSaved) { Foo.new.reload }
+    end
   end
   
   context "create" do

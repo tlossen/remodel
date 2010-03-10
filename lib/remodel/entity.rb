@@ -1,5 +1,4 @@
 require 'yajl'
-require 'set'
 
 module Remodel
 
@@ -16,25 +15,8 @@ module Remodel
       @key
     end
   
-    def self.create(attributes = {})
-      new(attributes).save
-    end
-  
-    def self.from_json(json)
-      new(parse(json))
-    end
-    
-    def self.find(key)
-      from_json(fetch(key))
-    end
-
-    def save
-      @key = self.class.next_key if key.nil?
-      self.class.redis.set(@key, to_json)
-      self
-    end
-    
     def reload
+      raise EntityNotSaved unless @key
       initialize(self.class.parse(self.class.fetch(key)))
       instance_variables.each do |var|
         remove_instance_variable(var) if var =~ /^@collection_/
@@ -42,8 +24,26 @@ module Remodel
       self
     end
 
+    def save
+      @key = self.class.next_key unless @key
+      self.class.redis.set(@key, to_json)
+      self
+    end
+    
     def to_json
       Yajl::Encoder.encode(self.class.pack(@attributes))
+    end
+
+    def self.from_json(json)
+      new(parse(json))
+    end
+    
+    def self.create(attributes = {})
+      new(attributes).save
+    end
+  
+    def self.find(key)
+      from_json(fetch(key))
     end
 
     def self.parse(json)
