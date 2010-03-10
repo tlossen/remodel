@@ -30,6 +30,12 @@ class TestEntity < Test::Unit::TestCase
       assert_equal 23, foo.x
       assert_equal 'adios', foo.y
     end
+    
+    should "raise EntityNotFound if the entity does not exist any more" do
+      foo = Foo.create
+      redis.del foo.key
+      assert_raise(Remodel::EntityNotFound) { foo.reload }
+    end
   end
   
   context "create" do
@@ -59,6 +65,11 @@ class TestEntity < Test::Unit::TestCase
       assert_equal 'hello', foo.x
       assert_equal false, foo.y
     end
+
+    should "not store the key as a property" do
+      foo = Foo.create :x => 'hello', :y => false
+      assert !(/f:1/ =~ redis.get(foo.key))
+    end    
   end
   
   context "save" do
@@ -115,12 +126,8 @@ class TestEntity < Test::Unit::TestCase
       assert_raise(Remodel::EntityNotFound) { Foo.find(23) }
     end
   end
-
+  
   context "properties" do
-    should "always have a property key" do
-      assert Foo.new.respond_to?(:key)
-    end
-    
     should "have property x" do
       foo = Foo.new
       foo.x = 23

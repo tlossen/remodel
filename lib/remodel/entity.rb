@@ -11,6 +11,10 @@ module Remodel
         send("#{key}=", value) if respond_to? "#{key}="
       end
     end
+    
+    def key
+      @key
+    end
   
     def self.create(attributes = {})
       new(attributes).save
@@ -25,8 +29,8 @@ module Remodel
     end
 
     def save
-      self.key = self.class.next_key if key.nil?
-      self.class.redis.set(key, to_json)
+      @key = self.class.next_key if key.nil?
+      self.class.redis.set(@key, to_json)
       self
     end
     
@@ -74,10 +78,6 @@ module Remodel
           
   private
   
-    def self.inherited(subclass)
-      subclass.property(:key)
-    end
-
     def self.fetch(key)
       redis.get(key) || raise(EntityNotFound)
     end
