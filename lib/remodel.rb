@@ -11,6 +11,7 @@ module Remodel
   class EntityNotFound < Error; end
   class InvalidKeyPrefix < Error; end
   class EntityNotSaved < Error; end
+  class InvalidType < Error; end
 
   def self.redis
     @redis ||= Redis.new

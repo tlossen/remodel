@@ -1,8 +1,8 @@
 require 'helper'
 
 class Item < Remodel::Entity
-  property :time, :mapper => Remodel::TimeMapper
-  property :date, :mapper => Remodel::DateMapper
+  property :time, :class => Time
+  property :date, :class => Date
 end
 
 class TestMappers < Test::Unit::TestCase
@@ -34,6 +34,16 @@ class TestMappers < Test::Unit::TestCase
       assert_match /"1972-06-16"/, json
     end
     
+    should "handle nil values" do
+      item = Item.create
+      assert_nil item.time
+      assert_nil item.date
+    end
+    
+    should "reject invalid types" do
+      assert_raise(Remodel::InvalidType) { Item.create :time => 34 }
+      assert_raise(Remodel::InvalidType) { Item.create :date => true }
+    end
   end
-  
+
 end

@@ -9,24 +9,23 @@ module Remodel
       value
     end
   end
-
-  class TimeMapper
-    def self.pack(value)
-      value.to_i
+  
+  class SimpleMapper
+    def initialize(clazz, pack_method, unpack_method)
+      @clazz = clazz
+      @pack_method = pack_method
+      @unpack_method = unpack_method
     end
     
-    def self.unpack(value)
-      Time.at(value)
-    end
-  end
-
-  class DateMapper
-    def self.pack(value)
-      value.to_s
+    def pack(value)
+      return nil if value.nil?
+      raise InvalidType unless value.is_a? @clazz
+      value.send(@pack_method)
     end
     
-    def self.unpack(value)
-      Date.parse(value)
+    def unpack(value)
+      return nil if value.nil?
+      @clazz.send(@unpack_method, value)
     end
   end
 

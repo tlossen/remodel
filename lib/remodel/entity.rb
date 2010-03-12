@@ -59,7 +59,7 @@ module Remodel
 
     def self.property(name, options = {})
       name = name.to_sym
-      mapper[name] = options[:mapper] || DefaultMapper
+      mapper[name] = mapper_for(options[:class])
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
@@ -77,6 +77,16 @@ module Remodel
     end
           
   private
+  
+    def self.mapper_for(clazz)
+      if clazz == Date
+        SimpleMapper.new(Date, :to_s, :parse)
+      elsif clazz == Time
+        SimpleMapper.new(Time, :to_i, :at)
+      else
+        DefaultMapper
+      end
+    end
   
     def self.fetch(key)
       redis.get(key) || raise(EntityNotFound)
