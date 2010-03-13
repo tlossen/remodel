@@ -82,8 +82,7 @@ now you can do:
 defunkts [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb) class 
 into [Remodel::Entity](http://github.com/tlossen/remodel/blob/master/lib/remodel/entity.rb)
 * [ohm](http://github.com/soveran/ohm) &mdash; object-hash mapping for redis. 
-somewhat similar, although based on a different mapping approach: instead of serializing to json,
-stores each attribute under its own key.
+somewhat similar, but instead of serializing to json, stores each attribute under a separate key.
 
 
 ## todo
@@ -91,12 +90,11 @@ stores each attribute under its own key.
 * `belongs_to`
 * `delete`
 * redis config
-* documentation (yardoc and/or [rocco](http://github.com/rtomayko/rocco))
-* package as gem
 * benchmarks
-* use redis hashes (once they are supported)
+* documentation ([rocco](http://github.com/rtomayko/rocco))
+* package as gem
 * `find_by` with ohm-like indexes
-* sharding??
+* maybe switch to redis hashes later?
 
 
 ## status
