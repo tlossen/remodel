@@ -1,11 +1,17 @@
 module Remodel
 
-  class DefaultMapper
-    def self.pack(value)
-      value
+  class IdentityMapper
+    def initialize(clazz = nil)
+      @clazz = clazz
     end
     
-    def self.unpack(value)
+    def pack(value)
+      return nil if value.nil?
+      raise InvalidType if @clazz && !value.is_a?(@clazz)
+      value
+    end
+  
+    def unpack(value)
       value
     end
   end

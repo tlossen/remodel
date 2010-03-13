@@ -34,29 +34,31 @@ plus ruby bindings:
 		$ brew install yajl
 		$ gem install yajl-ruby
 
-3. start redis, i.e.
+3. start redis:
 
 		$ redis-server
 
-4. now the tests should run successfully
+4. now the tests should run successfully:
 
 		$ rake
+		Started
+		.........................................
 		Finished in 0.025785 seconds.
-		39 tests, 60 assertions, 0 failures, 0 errors
+		41 tests, 74 assertions, 0 failures, 0 errors
 
 
 ## example
 
-define your domain model like this:
+define your domain model [like this](http://github.com/tlossen/remodel/blob/master/example/book.rb):
 
 	class Book < Remodel::Entity
 	  has_many :chapters, :class => 'Chapter'
-	  property :title
-	  property :year
+	  property :title, :class => String
+	  property :year, :class => Integer
 	end
 
 	class Chapter < Remodel::Entity
-	  property :title
+	  property :title, :class => String
 	end
 	
 now you can do:
@@ -64,11 +66,9 @@ now you can do:
 	>> require 'example/book'
 	=> true
 	>> book = Book.create :title => 'Moby Dick', :year => 1851
-	=> #<Book:0x11cc20c @attributes={:key=>"b:1", :year=>1851, :title=>"Moby Dick"}>
-	>> book.key
-	=> "b:1"
+	=> #<Book:0x11e08d8 @key="b:1", @attributes={:year=>1851, :title=>"Moby Dick"}>
 	>> book.chapters.create :title => 'Ishmael'
-	=> [#<Chapter:0x11d0578 @attributes={:key=>"c:1", :title=>"Ishmael"}>]
+	=> #<Chapter:0x11dd73c @key="c:1", @attributes={:title=>"Ishmael"}>
 	>> book.chapters.size
 	=> 1
 

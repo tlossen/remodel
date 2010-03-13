@@ -19,7 +19,7 @@ module Remodel
   
     def fetch(clazz, key)
       keys = redis.lrange(key, 0, -1)
-      keys.empty? ? [] : redis.mget(keys).map { |json| clazz.from_json(json) }
+      keys.empty? ? [] : keys.zip(redis.mget(keys)).map { |key, json| clazz.restore(key, json) }
     end
     
     def redis

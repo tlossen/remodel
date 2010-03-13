@@ -1,6 +1,11 @@
 require 'helper'
 
 class Item < Remodel::Entity
+  property :string, :class => String
+  property :integer, :class => Integer
+  property :float, :class => Float
+  property :array, :class => Array
+  property :hash, :class => Hash
   property :time, :class => Time
   property :date, :class => Date
 end
@@ -36,13 +41,23 @@ class TestMappers < Test::Unit::TestCase
     
     should "handle nil values" do
       item = Item.create
+      assert_nil item.string
+      assert_nil item.integer
+      assert_nil item.float
+      assert_nil item.array
+      assert_nil item.hash
       assert_nil item.time
       assert_nil item.date
     end
     
     should "reject invalid types" do
-      assert_raise(Remodel::InvalidType) { Item.create :time => 34 }
-      assert_raise(Remodel::InvalidType) { Item.create :date => true }
+      assert_raise(Remodel::InvalidType) { Item.create :string => true }
+      assert_raise(Remodel::InvalidType) { Item.create :integer => 33.5 }
+      assert_raise(Remodel::InvalidType) { Item.create :float => 5 }
+      assert_raise(Remodel::InvalidType) { Item.create :array => {} }
+      assert_raise(Remodel::InvalidType) { Item.create :hash => [] }
+      assert_raise(Remodel::InvalidType) { Item.create :time => Date.new }
+      assert_raise(Remodel::InvalidType) { Item.create :date => Time.now }
     end
   end
 

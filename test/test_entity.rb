@@ -191,16 +191,13 @@ class TestEntity < Test::Unit::TestCase
       assert_match /"x":42/, foo.to_json
       assert_match /"y":true/, foo.to_json
     end
-    
-    should "create from json" do
-      foo = Foo.from_json %q({"x":23,"y":false})
-      assert_equal 23, foo.x
-      assert_equal false, foo.y
-    end
-    
-    should "work in roundtrip" do
-      before = Foo.new :x => 42, :y => true
-      after = Foo.from_json(before.to_json)
+  end
+  
+  context "restore" do
+    should "restore an entity from json" do
+      before = Foo.create :x => 42, :y => true
+      after = Foo.restore(before.key, before.to_json)
+      assert_equal before.key, after.key
       assert_equal before.x, after.x
       assert_equal before.y, after.y
     end

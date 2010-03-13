@@ -4,8 +4,9 @@ module Remodel
 
   class Entity
     
-    def initialize(attributes = {})
+    def initialize(attributes = {}, key = nil)
       @attributes = {}
+      @key = key
       attributes.each do |key, value| 
         send("#{key}=", value) if respond_to? "#{key}="
       end
@@ -23,7 +24,7 @@ module Remodel
     
     def reload
       raise EntityNotSaved unless @key
-      initialize(self.class.parse(self.class.fetch(@key)))
+      initialize(self.class.parse(self.class.fetch(@key)), @key)
       instance_variables.each do |var|
         remove_instance_variable(var) if var =~ /^@collection_/
       end
@@ -34,20 +35,16 @@ module Remodel
       Yajl::Encoder.encode(self.class.pack(@attributes))
     end
 
-    def self.from_json(json)
-      new(parse(json))
-    end
-    
     def self.create(attributes = {})
       new(attributes).save
     end
   
     def self.find(key)
-      from_json(fetch(key))
+      restore(key, fetch(key))
     end
 
-    def self.parse(json)
-      unpack(Yajl::Parser.parse(json))
+    def self.restore(key, json)
+      new(parse(json), key)
     end
     
   protected
@@ -59,7 +56,7 @@ module Remodel
 
     def self.property(name, options = {})
       name = name.to_sym
-      mapper[name] = mapper_for(options[:class])
+      mapper[name] = mapper_by_class[options[:class]]
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
@@ -78,14 +75,20 @@ module Remodel
           
   private
   
-    def self.mapper_for(clazz)
-      if clazz == Date
-        SimpleMapper.new(Date, :to_s, :parse)
-      elsif clazz == Time
-        SimpleMapper.new(Time, :to_i, :at)
-      else
-        DefaultMapper
-      end
+    def self.mapper_by_class
+      @mapper_by_class ||= Hash.new(IdentityMapper.new).merge(
+        String => IdentityMapper.new(String),
+        Integer => IdentityMapper.new(Integer),
+        Float => IdentityMapper.new(Float),
+        Array => IdentityMapper.new(Array),
+        Hash => IdentityMapper.new(Hash),
+        Date => SimpleMapper.new(Date, :to_s, :parse),
+        Time => SimpleMapper.new(Time, :to_i, :at)
+      )
+    end
+    
+    def self.parse(json)
+      unpack(Yajl::Parser.parse(json))
     end
   
     def self.fetch(key)
