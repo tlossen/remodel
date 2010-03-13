@@ -3,10 +3,9 @@ module Remodel
   class Collection < Array
     
     def initialize(clazz, key)
-      clazz = Kernel.const_get(clazz.to_s) # accepts String, Symbol or Class
-      super fetch(clazz, key)
-      @clazz = clazz
+      @clazz = Remodel.find_class(clazz)
       @key = key
+      super fetch(@clazz, @key)
     end
     
     def create(attributes = {})
@@ -19,7 +18,10 @@ module Remodel
   
     def fetch(clazz, key)
       keys = redis.lrange(key, 0, -1)
-      keys.empty? ? [] : keys.zip(redis.mget(keys)).map { |key, json| clazz.restore(key, json) }
+      values = keys.empty? ? [] : redis.mget(keys)
+      keys.zip(values).map do |key, json|
+        clazz.restore(key, json) if json
+      end.compact
     end
     
     def redis

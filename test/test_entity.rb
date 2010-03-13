@@ -23,18 +23,32 @@ class TestEntity < Test::Unit::TestCase
   end
   
   context "reload" do
+    setup do
+      @foo = Foo.create :x => 'hello', :y => true
+    end
+
     should "reload all properties" do
-      foo = Foo.create :x => 'hello', :y => true
-      redis.set foo.key, %q({"x":23,"y":"adios"})
-      foo.reload
-      assert_equal 23, foo.x
-      assert_equal 'adios', foo.y
+      redis.set @foo.key, %q({"x":23,"y":"adios"})
+      @foo.reload
+      assert_equal 23, @foo.x
+      assert_equal 'adios', @foo.y
+    end
+    
+    should "keep the key" do
+      key = @foo.key
+      @foo.reload
+      assert_equal key, @foo.key
+    end
+    
+    should "stay the same object" do
+      id = @foo.object_id
+      @foo.reload
+      assert_equal id, @foo.object_id
     end
     
     should "raise EntityNotFound if the entity does not exist any more" do
-      foo = Foo.create
-      redis.del foo.key
-      assert_raise(Remodel::EntityNotFound) { foo.reload }
+      redis.del @foo.key
+      assert_raise(Remodel::EntityNotFound) { @foo.reload }
     end
     
     should "raise EntityNotSaved if the entity was never saved" do

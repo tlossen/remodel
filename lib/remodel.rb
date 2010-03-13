@@ -17,5 +17,10 @@ module Remodel
     @redis ||= Redis.new
   end
   
+  # accepts String, Symbol or Class
+  def self.find_class(clazz)
+    Kernel.const_get(clazz.to_s) if clazz
+  end
+  
 end
 

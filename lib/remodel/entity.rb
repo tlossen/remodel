@@ -7,8 +7,8 @@ module Remodel
     def initialize(attributes = {}, key = nil)
       @attributes = {}
       @key = key
-      attributes.each do |key, value| 
-        send("#{key}=", value) if respond_to? "#{key}="
+      attributes.each do |name, value| 
+        send("#{name}=", value) if respond_to? "#{name}="
       end
     end
     
@@ -56,7 +56,8 @@ module Remodel
 
     def self.property(name, options = {})
       name = name.to_sym
-      mapper[name] = mapper_by_class[options[:class]]
+      clazz = Remodel.find_class(options[:class])
+      mapper[name] = mapper_by_class[clazz]
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
@@ -96,8 +97,8 @@ module Remodel
     end
   
     def self.next_key
-      next_val = redis.incr("#{key_prefix}:seq")
-      "#{key_prefix}:#{next_val}"
+      counter = redis.incr("#{key_prefix}:seq")
+      "#{key_prefix}:#{counter}"
     end
   
     def self.key_prefix
@@ -106,17 +107,17 @@ module Remodel
     
     def self.pack(attributes)
       result = {}
-      attributes.each do |key, value|
-        result[key] = mapper[key].pack(value)
+      attributes.each do |name, value|
+        result[name] = mapper[name].pack(value)
       end
       result
     end
     
     def self.unpack(attributes)
       result = {}
-      attributes.each do |key, value|
-        key = key.to_sym
-        result[key] = mapper[key].unpack(value)
+      attributes.each do |name, value|
+        name = name.to_sym
+        result[name] = mapper[name].unpack(value)
       end
       result
     end

@@ -54,8 +54,8 @@ define your domain model [like this](http://github.com/tlossen/remodel/blob/mast
 
 	class Book < Remodel::Entity
 	  has_many :chapters, :class => 'Chapter'
-	  property :title, :class => String
-	  property :year, :class => Integer
+	  property :title, :class => 'String'
+	  property :year, :class => 'Integer'
 	end
 
 	class Chapter < Remodel::Entity
