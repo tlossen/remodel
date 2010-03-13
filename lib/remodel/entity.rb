@@ -50,7 +50,7 @@ module Remodel
   protected
 
     def self.set_key_prefix(prefix)
-      raise InvalidKeyPrefix unless prefix =~ /^[a-z]+$/
+      raise(InvalidKeyPrefix, prefix) unless prefix =~ /^[a-z]+$/
       @key_prefix = prefix
     end
 
@@ -93,7 +93,7 @@ module Remodel
     end
   
     def self.fetch(key)
-      redis.get(key) || raise(EntityNotFound)
+      redis.get(key) || raise(EntityNotFound, "no #{name} with key #{key}")
     end
   
     def self.next_key

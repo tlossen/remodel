@@ -7,7 +7,7 @@ module Remodel
     
     def pack(value)
       return nil if value.nil?
-      raise InvalidType if @clazz && !value.is_a?(@clazz)
+      raise(InvalidType, "#{value.inspect} is not a #{@clazz}") if @clazz && !value.is_a?(@clazz)
       value
     end
   
@@ -25,7 +25,7 @@ module Remodel
     
     def pack(value)
       return nil if value.nil?
-      raise InvalidType unless value.is_a? @clazz
+      raise(InvalidType, "#{value.inspect} is not a #{@clazz}") unless value.is_a? @clazz
       value.send(@pack_method)
     end
     
