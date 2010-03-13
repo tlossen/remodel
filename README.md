@@ -1,15 +1,16 @@
 # remodel your storage layer!
 
+use [redis](http://github.com/antirez/redis) instead of mysql to store your application data.
+
 
 ## overview
 
-use [redis](http://github.com/antirez/redis) instead of mysql to store your application data.
-remodel (= redis model) is meant as a direct replacement for ActiveRecord and
+remodel (= redis model) is meant as a direct replacement for active record and
 offers familiar syntax like `has_many`, `belongs_to` etc. to build your domain model in ruby.
 
 redis offers in-memory read and write performance &mdash; on the order of 10K to 100K 
 operations per second, comparable to [memcached](http://memcached.org/) &mdash; plus asynchronous
-persistence to disk. for example, on my macbook (2 Ghz):
+persistence to disk. for example, on my macbook (2 ghz):
 
 	$ redis-benchmark -d 100 -r 10000 -q
 	SET: 13864.27 requests per second
