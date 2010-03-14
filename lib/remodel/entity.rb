@@ -4,18 +4,16 @@ module Remodel
 
   class Entity
     
+    attr_accessor :key
+    
     def initialize(attributes = {}, key = nil)
       @attributes = {}
       @key = key
-      attributes.each do |name, value| 
+      attributes.each do |name, value|
         send("#{name}=", value) if respond_to? "#{name}="
       end
     end
     
-    def key
-      @key
-    end
-  
     def save
       @key = self.class.next_key unless @key
       self.class.redis.set(@key, to_json)
@@ -76,22 +74,6 @@ module Remodel
           
   private
   
-    def self.mapper_by_class
-      @mapper_by_class ||= Hash.new(IdentityMapper.new).merge(
-        String => IdentityMapper.new(String),
-        Integer => IdentityMapper.new(Integer),
-        Float => IdentityMapper.new(Float),
-        Array => IdentityMapper.new(Array),
-        Hash => IdentityMapper.new(Hash),
-        Date => SimpleMapper.new(Date, :to_s, :parse),
-        Time => SimpleMapper.new(Time, :to_i, :at)
-      )
-    end
-    
-    def self.parse(json)
-      unpack(Yajl::Parser.parse(json))
-    end
-  
     def self.fetch(key)
       redis.get(key) || raise(EntityNotFound, "no #{name} with key #{key}")
     end
@@ -105,6 +87,10 @@ module Remodel
       @key_prefix ||= name[0,1].downcase
     end
     
+    def self.parse(json)
+      unpack(Yajl::Parser.parse(json))
+    end
+  
     def self.pack(attributes)
       result = {}
       attributes.each do |name, value|
@@ -120,6 +106,18 @@ module Remodel
         result[name] = mapper[name].unpack(value)
       end
       result
+    end
+    
+    def self.mapper_by_class
+      @mapper_by_class ||= Hash.new(IdentityMapper.new).merge(
+        String => IdentityMapper.new(String),
+        Integer => IdentityMapper.new(Integer),
+        Float => IdentityMapper.new(Float),
+        Array => IdentityMapper.new(Array),
+        Hash => IdentityMapper.new(Hash),
+        Date => SimpleMapper.new(Date, :to_s, :parse),
+        Time => SimpleMapper.new(Time, :to_i, :at)
+      )
     end
   
     def self.mapper
