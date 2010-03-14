@@ -1,5 +1,9 @@
 require 'helper'
 
+class Thing < Remodel::Entity
+  property :name
+end
+
 class Item < Remodel::Entity
   property :string, :class => String
   property :integer, :class => Integer
@@ -8,6 +12,7 @@ class Item < Remodel::Entity
   property :hash, :class => Hash
   property :time, :class => Time
   property :date, :class => Date
+  property :thing, :class => Thing
 end
 
 class TestMappers < Test::Unit::TestCase
@@ -48,6 +53,7 @@ class TestMappers < Test::Unit::TestCase
       assert_nil item.hash
       assert_nil item.time
       assert_nil item.date
+      assert_nil item.thing
     end
     
     should "reject invalid types" do
@@ -58,6 +64,7 @@ class TestMappers < Test::Unit::TestCase
       assert_raise(Remodel::InvalidType) { Item.create :hash => [] }
       assert_raise(Remodel::InvalidType) { Item.create :time => Date.new }
       assert_raise(Remodel::InvalidType) { Item.create :date => Time.now }
+      assert_raise(Remodel::InvalidType) { Item.create :thing => "hello" }
     end
   end
 

@@ -7,6 +7,7 @@ class Book < Remodel::Entity
 end
 
 class Chapter < Remodel::Entity
+  property :book, :class => Book
   property :title, :class => String
 end
 

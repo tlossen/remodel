@@ -34,5 +34,23 @@ module Remodel
       @clazz.send(@unpack_method, value)
     end
   end
+  
+  class EntityMapper
+    def initialize(clazz)
+      @clazz = clazz
+    end
+    
+    def pack(value)
+      return nil if value.nil?
+      raise(InvalidType, "#{value.inspect} is not a #{@clazz}") unless value.is_a? @clazz
+      # value.save unless value.key
+      value.key
+    end
+
+    def unpack(value)
+      return nil if value.nil?
+      @clazz.find(value)
+    end
+  end
 
 end

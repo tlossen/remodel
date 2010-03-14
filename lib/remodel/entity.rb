@@ -55,7 +55,7 @@ module Remodel
     def self.property(name, options = {})
       name = name.to_sym
       clazz = Remodel.find_class(options[:class])
-      mapper[name] = mapper_by_class[clazz]
+      mapper[name] = mapper_for(clazz)
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
@@ -71,7 +71,7 @@ module Remodel
         end
       end
     end
-          
+    
   private
   
     def self.fetch(key)
@@ -106,6 +106,11 @@ module Remodel
         result[name] = mapper[name].unpack(value)
       end
       result
+    end
+    
+    def self.mapper_for(clazz)
+      return IdentityMapper.new unless clazz
+      clazz < Entity ? EntityMapper.new(clazz) : mapper_by_class[clazz]
     end
     
     def self.mapper_by_class
