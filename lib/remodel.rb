@@ -13,13 +13,20 @@ module Remodel
   class EntityNotSaved < Error; end
   class InvalidType < Error; end
 
+  def self.mapper_by_class
+    @mapper_by_class ||= Hash.new(IdentityMapper.new).merge(
+      String => IdentityMapper.new(String),
+      Integer => IdentityMapper.new(Integer),
+      Float => IdentityMapper.new(Float),
+      Array => IdentityMapper.new(Array),
+      Hash => IdentityMapper.new(Hash),
+      Date => SimpleMapper.new(Date, :to_s, :parse),
+      Time => SimpleMapper.new(Time, :to_i, :at)
+    )
+  end
+
   def self.redis
     @redis ||= Redis.new
-  end
-  
-  # accepts String, Symbol or Class
-  def self.find_class(clazz)
-    Kernel.const_get(clazz.to_s) if clazz
   end
   
 end

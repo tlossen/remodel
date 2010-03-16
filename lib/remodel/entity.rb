@@ -54,20 +54,42 @@ module Remodel
 
     def self.property(name, options = {})
       name = name.to_sym
-      clazz = Remodel.find_class(options[:class])
-      mapper[name] = mapper_for(clazz)
+      clazz = find_class(options[:class])
+      mapper[name] = Remodel.mapper_by_class[clazz]
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
     
     def self.has_many(name, options)
-      name = name.to_sym
+      var = "@association_#{name}".to_sym
       define_method(name) do
-        var = "@association_#{name}".to_sym
         if instance_variable_defined? var
-          instance_variable_get var
+          instance_variable_get(var)
         else
-          instance_variable_set var, HasMany.new(options[:class], "#{key}:#{name}")
+          clazz = Entity.find_class(options[:class])
+          instance_variable_set(var, HasMany.new(clazz, "#{key}:#{name}"))
+        end
+      end
+    end
+    
+    def self.has_one(name, options)
+      var = "@association_#{name}".to_sym
+      define_method(name) do
+        if instance_variable_defined? var
+          instance_variable_get(var)
+        else
+          clazz = Entity.find_class(options[:class])
+          value_key = redis.get("#{key}:#{name}")
+          instance_variable_set(var, clazz.find(value_key)) if value_key
+        end
+      end
+      define_method("#{name}=") do |value|
+        if value
+          instance_variable_set(var, value)
+          redis.set("#{key}:#{name}", value.key)
+        else
+          remove_instance_variable(var)
+          redis.del("#{key}:#{name}")
         end
       end
     end
@@ -85,6 +107,11 @@ module Remodel
   
     def self.key_prefix
       @key_prefix ||= name[0,1].downcase
+    end
+    
+    # converts String, Symbol or Class into Class
+    def self.find_class(clazz)
+      Kernel.const_get(clazz.to_s) if clazz
     end
     
     def self.parse(json)
@@ -108,28 +135,15 @@ module Remodel
       result
     end
     
-    def self.mapper_for(clazz)
-      return IdentityMapper.new unless clazz
-      clazz < Entity ? EntityMapper.new(clazz) : mapper_by_class[clazz]
-    end
-    
-    def self.mapper_by_class
-      @mapper_by_class ||= Hash.new(IdentityMapper.new).merge(
-        String => IdentityMapper.new(String),
-        Integer => IdentityMapper.new(Integer),
-        Float => IdentityMapper.new(Float),
-        Array => IdentityMapper.new(Array),
-        Hash => IdentityMapper.new(Hash),
-        Date => SimpleMapper.new(Date, :to_s, :parse),
-        Time => SimpleMapper.new(Time, :to_i, :at)
-      )
-    end
-  
     def self.mapper
       @mapper ||= {}
     end
     
     def self.redis
+      Remodel.redis
+    end
+    
+    def redis
       Remodel.redis
     end
   

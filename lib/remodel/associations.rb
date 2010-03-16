@@ -1,11 +1,10 @@
 module Remodel
 
   class HasMany < Array
-    
     def initialize(clazz, key)
-      @clazz = Remodel.find_class(clazz)
+      super fetch(clazz, key)
+      @clazz = clazz
       @key = key
-      super fetch(@clazz, @key)
     end
     
     def create(attributes = {})
@@ -27,7 +26,6 @@ module Remodel
     def redis
       Remodel.redis
     end
-
   end
 
 end
