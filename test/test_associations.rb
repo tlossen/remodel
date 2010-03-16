@@ -8,11 +8,11 @@ class Piece < Remodel::Entity
   property :color
 end
 
-class TestEntityCollections < Test::Unit::TestCase
+class TestAssociations < Test::Unit::TestCase
 
   context "has_many" do
     
-    context "collection property" do
+    context "association" do
       should "exist" do
         assert Puzzle.create.respond_to?(:pieces)
       end
@@ -56,7 +56,7 @@ class TestEntityCollections < Test::Unit::TestCase
   end
   
   context "reload" do
-    should "reload all collections" do
+    should "reload all associations" do
       puzzle = Puzzle.create
       piece = puzzle.pieces.create :color => 'black'
       redis.del "#{puzzle.key}:pieces"

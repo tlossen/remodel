@@ -24,7 +24,7 @@ module Remodel
       raise EntityNotSaved unless @key
       initialize(self.class.parse(self.class.fetch(@key)), @key)
       instance_variables.each do |var|
-        remove_instance_variable(var) if var =~ /^@collection_/
+        remove_instance_variable(var) if var =~ /^@association_/
       end
       self
     end
@@ -63,11 +63,11 @@ module Remodel
     def self.has_many(name, options)
       name = name.to_sym
       define_method(name) do
-        var = "@collection_#{name}".to_sym
+        var = "@association_#{name}".to_sym
         if instance_variable_defined? var
           instance_variable_get var
         else
-          instance_variable_set var, Collection.new(options[:class], "#{key}:#{name}")
+          instance_variable_set var, HasMany.new(options[:class], "#{key}:#{name}")
         end
       end
     end

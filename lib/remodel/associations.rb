@@ -1,6 +1,6 @@
 module Remodel
 
-  class Collection < Array
+  class HasMany < Array
     
     def initialize(clazz, key)
       @clazz = Remodel.find_class(clazz)

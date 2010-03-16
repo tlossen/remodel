@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'redis'
 
-require File.dirname(__FILE__) + "/remodel/collection.rb"
+require File.dirname(__FILE__) + "/remodel/associations.rb"
 require File.dirname(__FILE__) + "/remodel/entity.rb"
 require File.dirname(__FILE__) + "/remodel/mappers.rb"
 
