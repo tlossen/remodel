@@ -59,6 +59,7 @@ define your domain model [like this](http://github.com/tlossen/remodel/blob/mast
 	end
 
 	class Chapter < Remodel::Entity
+	  has_one :book, :class => Book
 	  property :title, :class => String
 	end
 	
@@ -77,7 +78,7 @@ now you can do:
 ## inspired by
 
 * [how to redis](http://www.paperplanes.de/2009/10/30/how_to_redis.html)
-&mdash; good overview of differenct mapping options by [mattmatt](http://github.com/mattmatt)
+&mdash; good overview of different mapping options by [mattmatt](http://github.com/mattmatt)
 * [hurl](http://github.com/defunkt/hurl) &mdash; basically i extracted
 defunkts [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb) class 
 into [Remodel::Entity](http://github.com/tlossen/remodel/blob/master/lib/remodel/entity.rb)
@@ -87,12 +88,12 @@ somewhat similar, but instead of serializing to json, stores each attribute unde
 
 ## todo
 
-* `belongs_to`
+* reverse associations
 * `delete`
 * redis config
-* benchmarks
 * documentation ([rocco](http://github.com/rtomayko/rocco))
 * package as gem
+* benchmarks
 * `find_by` with ohm-like indexes
 * maybe switch to redis hashes later?
 
