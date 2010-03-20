@@ -1,12 +1,12 @@
-# remodel your storage layer!
+# remodel your storage layer
 
 use [redis](http://github.com/antirez/redis) instead of mysql to store your application data.
 
+remodel (= redis model) is an ActiveRecord-like mapping layer offers familiar syntax 
+like `has_many`, `has_one` etc. to build your domain model in ruby.
 
-## overview
 
-remodel (= redis model) is meant as a direct replacement for active record and
-offers familiar syntax like `has_many`, `belongs_to` etc. to build your domain model in ruby.
+## why redis?
 
 redis offers in-memory read and write performance &mdash; on the order of 10K to 100K 
 operations per second, comparable to [memcached](http://memcached.org/) &mdash; plus asynchronous
@@ -44,8 +44,8 @@ plus ruby bindings:
 		$ rake
 		Started
 		.........................................
-		Finished in 0.025785 seconds.
-		41 tests, 74 assertions, 0 failures, 0 errors
+		Finished in 0.044646 seconds.
+		50 tests, 83 assertions, 0 failures, 0 errors
 
 
 ## example
@@ -68,9 +68,9 @@ now you can do:
 	>> require 'example/book'
 	=> true
 	>> book = Book.create :title => 'Moby Dick', :year => 1851
-	=> #<Book:0x11e08d8 @key="b:1", @attributes={:year=>1851, :title=>"Moby Dick"}>
+	=> #<Book key: "b:1", year: 1851, title: "Moby Dick">
 	>> book.chapters.create :title => 'Ishmael'
-	=> #<Chapter:0x11dd73c @key="c:1", @attributes={:title=>"Ishmael"}>
+	=> #<Chapter key: "c:1", title: "Ishmael">
 	>> book.chapters.size
 	=> 1
 
@@ -90,12 +90,11 @@ somewhat similar, but instead of serializing to json, stores each attribute unde
 
 * reverse associations
 * `delete`
-* redis config
-* documentation ([rocco](http://github.com/rtomayko/rocco))
+* redis configurable
 * package as gem
+* documentation ([rocco](http://github.com/rtomayko/rocco))
 * benchmarks
-* `find_by` with ohm-like indexes
-* maybe switch to redis hashes later?
+* `find_by`
 
 
 ## status

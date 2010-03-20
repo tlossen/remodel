@@ -32,8 +32,7 @@ module Remodel
   class HasMany < Array
     def initialize(clazz, key)
       super fetch(clazz, key)
-      @clazz = clazz
-      @key = key
+      @clazz, @key = clazz, key
     end
     
     def create(attributes = {})
@@ -85,6 +84,11 @@ module Remodel
 
     def to_json
       Yajl::Encoder.encode(self.class.pack(@attributes))
+    end
+    
+    def inspect
+      properties = @attributes.merge(:key => key).map { |name, value| "#{name}: #{value.inspect}" }.join(', ')
+      "\#<#{self.class.name} #{properties}>"
     end
 
     def self.create(attributes = {})
