@@ -6,28 +6,12 @@ module Remodel
 
   class Error < ::StandardError; end
   class EntityNotFound < Error; end
-  class InvalidKeyPrefix < Error; end
   class EntityNotSaved < Error; end
+  class InvalidKeyPrefix < Error; end
   class InvalidType < Error; end
   
-  class IdentityMapper
-    def initialize(clazz = nil)
-      @clazz = clazz
-    end
-    
-    def pack(value)
-      return nil if value.nil?
-      raise(InvalidType, "#{value.inspect} is not a #{@clazz}") if @clazz && !value.is_a?(@clazz)
-      value
-    end
-  
-    def unpack(value)
-      value
-    end
-  end
-  
-  class SimpleMapper
-    def initialize(clazz, pack_method, unpack_method)
+  class Mapper
+    def initialize(clazz = nil, pack_method = nil, unpack_method = nil)
       @clazz = clazz
       @pack_method = pack_method
       @unpack_method = unpack_method
@@ -35,13 +19,13 @@ module Remodel
     
     def pack(value)
       return nil if value.nil?
-      raise(InvalidType, "#{value.inspect} is not a #{@clazz}") unless value.is_a? @clazz
-      value.send(@pack_method)
+      raise(InvalidType, "#{value.inspect} is not a #{@clazz}") if @clazz && !value.is_a?(@clazz)
+      @pack_method ? value.send(@pack_method) : value
     end
     
     def unpack(value)
       return nil if value.nil?
-      @clazz.send(@unpack_method, value)
+      @unpack_method ? @clazz.send(@unpack_method, value) : value
     end
   end
   
@@ -223,14 +207,14 @@ module Remodel
   end
   
   def self.mapper_by_class
-    @mapper_by_class ||= Hash.new(IdentityMapper.new).merge(
-      String => IdentityMapper.new(String),
-      Integer => IdentityMapper.new(Integer),
-      Float => IdentityMapper.new(Float),
-      Array => IdentityMapper.new(Array),
-      Hash => IdentityMapper.new(Hash),
-      Date => SimpleMapper.new(Date, :to_s, :parse),
-      Time => SimpleMapper.new(Time, :to_i, :at)
+    @mapper_by_class ||= Hash.new(Mapper.new).merge(
+      String => Mapper.new(String),
+      Integer => Mapper.new(Integer),
+      Float => Mapper.new(Float),
+      Array => Mapper.new(Array),
+      Hash => Mapper.new(Hash),
+      Date => Mapper.new(Date, :to_s, :parse),
+      Time => Mapper.new(Time, :to_i, :at)
     )
   end
   
