@@ -6,7 +6,7 @@ class Puzzle < Remodel::Entity
 end
 
 class Piece < Remodel::Entity
-  has_one :puzzle, :class => 'Puzzle'
+  has_one :puzzle, :class => 'Puzzle', :reverse => 'pieces'
   property :color
 end
 
@@ -42,11 +42,33 @@ class TestAssociations < Test::Unit::TestCase
         assert_equal puzzle.key, redis.get("#{piece.key}:puzzle")
       end
       
+      should "add the entity to the reverse association" do
+        puzzle = Puzzle.create
+        piece = Piece.create
+        piece.puzzle = puzzle
+        assert_equal 1, puzzle.pieces.size
+      end
+      
+      should "be settable to nil" do
+        piece = Piece.create
+        piece.puzzle = nil
+        assert_nil piece.puzzle
+      end
+
       should "remove the key if set to nil" do
         piece = Piece.create
         piece.puzzle = Puzzle.create
         piece.puzzle = nil
         assert_nil redis.get("#{piece.key}:puzzle")
+      end
+      
+      should "remove the entity from the reverse association if set to nil" do
+        puzzle = Puzzle.create
+        piece = Piece.create
+        piece.puzzle = puzzle
+        piece.puzzle = nil
+        puzzle.reload
+        assert_equal 0, puzzle.pieces.size
       end
     end
   end

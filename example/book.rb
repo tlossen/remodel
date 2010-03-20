@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + "/../lib/remodel.rb"
+require File.dirname(__FILE__) + "/../lib/remodel"
 
 class Book < Remodel::Entity
   has_many :chapters, :class => 'Chapter', :reverse => :book
@@ -7,7 +7,7 @@ class Book < Remodel::Entity
 end
 
 class Chapter < Remodel::Entity
-  has_one :book, :class => Book
+  has_one :book, :class => Book, :reverse => :chapters
   property :title, :class => String
 end
 

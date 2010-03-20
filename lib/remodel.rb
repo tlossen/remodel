@@ -40,13 +40,22 @@ module Remodel
     end
     
     def add(entity)
-      entity.send("#{@reverse}=", @entity) if @reverse
+      entity.send("_#{@reverse}=", @entity) if @reverse
+      _add(entity)
+    end
+
+  private
+  
+    def _add(entity)
       self << entity
       redis.rpush(@key, entity.key)
       entity
     end
-
-  private
+    
+    def _remove(entity)
+      delete_if { |x| x.key = entity.key }
+      redis.lrem(@key, 0, entity.key)
+    end
   
     def fetch(clazz, key)
       keys = redis.lrange(key, 0, -1)
@@ -137,6 +146,7 @@ module Remodel
     
     def self.has_one(name, options)
       var = "@association_#{name}".to_sym
+      
       define_method(name) do
         if instance_variable_defined? var
           instance_variable_get(var)
@@ -146,12 +156,25 @@ module Remodel
           instance_variable_set(var, clazz.find(value_key)) if value_key
         end
       end
+      
       define_method("#{name}=") do |value|
+        if options[:reverse]
+          if value
+            value.send("#{options[:reverse]}").send("_add", self)
+          else
+            old_value = send(name)
+            old_value.send("#{options[:reverse]}").send("_remove", self) if old_value
+          end
+        end
+        send("_#{name}=", value)
+      end
+      
+      define_method("_#{name}=") do |value|
         if value
           instance_variable_set(var, value)
           redis.set("#{key}:#{name}", value.key)
         else
-          remove_instance_variable(var)
+          remove_instance_variable(var) if instance_variable_defined? var
           redis.del("#{key}:#{name}")
         end
       end
