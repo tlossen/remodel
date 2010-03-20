@@ -59,7 +59,7 @@ define your domain model [like this](http://github.com/tlossen/remodel/blob/mast
 	end
 
 	class Chapter < Remodel::Entity
-	  has_one :book, :class => Book
+	  has_one :book, :class => Book, :reverse => :chapters
 	  property :title, :class => String
 	end
 	
@@ -88,9 +88,8 @@ somewhat similar, but instead of serializing to json, stores each attribute unde
 
 ## todo
 
-* reverse associations
+* reverse associations: one-to-one, many-to-many
 * `delete`
-* redis configurable
 * package as gem
 * documentation ([rocco](http://github.com/rtomayko/rocco))
 * benchmarks

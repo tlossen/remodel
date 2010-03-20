@@ -238,6 +238,10 @@ module Remodel
     @redis ||= Redis.new
   end
   
+  def self.redis=(redis)
+    @redis = redis
+  end
+  
   def self.mapper_by_class
     @mapper_by_class ||= Hash.new(Mapper.new).merge(
       String => Mapper.new(String),
