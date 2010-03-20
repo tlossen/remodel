@@ -1,7 +1,7 @@
 require 'helper'
 
 class Puzzle < Remodel::Entity
-  has_many :pieces, :class => 'Piece'
+  has_many :pieces, :class => 'Piece', :reverse => 'puzzle'
   property :topic
 end
 
@@ -52,7 +52,6 @@ class TestAssociations < Test::Unit::TestCase
   end
 
   context "has_many" do
-    
     context "association" do
       should "exist" do
         assert Puzzle.create.respond_to?(:pieces)
@@ -85,32 +84,51 @@ class TestAssociations < Test::Unit::TestCase
         should "create and store a new child" do
           puzzle = Puzzle.create
           puzzle.pieces.create :color => 'green'
-          puzzle.pieces.create :color => 'yellow'
-          assert_equal 2, puzzle.pieces.size
+          assert_equal 1, puzzle.pieces.size
           puzzle.reload
-          assert_equal 2, puzzle.pieces.size
-          assert_equal Piece, puzzle.pieces[1].class
-          assert_equal 'yellow', puzzle.pieces[1].color
+          assert_equal 1, puzzle.pieces.size
+          assert_equal Piece, puzzle.pieces[0].class
+          assert_equal 'green', puzzle.pieces[0].color
+        end
+        
+        should "associate the created child with self" do
+          puzzle = Puzzle.create :topic => 'provence'
+          piece = puzzle.pieces.create :color => 'green'
+          assert_equal 'provence', piece.puzzle.topic
         end
       end
+
+      context "add" do
+        should "add the given entity to the association" do
+          puzzle = Puzzle.create
+          piece = Piece.create :color => 'white'
+          puzzle.pieces.add piece
+          assert_equal 1, puzzle.pieces.size
+          puzzle.reload
+          assert_equal 1, puzzle.pieces.size
+          assert_equal Piece, puzzle.pieces[0].class
+          assert_equal 'white', puzzle.pieces[0].color
+        end
+      end
+      
     end
   end
   
   context "reload" do
-    should "reset has_many associations" do
-      puzzle = Puzzle.create
-      piece = puzzle.pieces.create :color => 'black'
-      redis.del "#{puzzle.key}:pieces"
-      puzzle.reload
-      assert_equal [], puzzle.pieces
-    end
-    
     should "reset has_one associations" do
       piece = Piece.create :color => 'black'
       piece.puzzle = Puzzle.create
       redis.del "#{piece.key}:puzzle"
       piece.reload
       assert_nil piece.puzzle
+    end
+
+    should "reset has_many associations" do
+      puzzle = Puzzle.create
+      piece = puzzle.pieces.create :color => 'black'
+      redis.del "#{puzzle.key}:pieces"
+      puzzle.reload
+      assert_equal [], puzzle.pieces
     end
   end
   

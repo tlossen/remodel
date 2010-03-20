@@ -2,7 +2,7 @@
 
 use [redis](http://github.com/antirez/redis) instead of mysql to store your application data.
 
-remodel (= redis model) is an ActiveRecord-like mapping layer offers familiar syntax 
+remodel (= redis model) is an ActiveRecord-like mapping layer which offers familiar syntax 
 like `has_many`, `has_one` etc. to build your domain model in ruby.
 
 
@@ -53,7 +53,7 @@ plus ruby bindings:
 define your domain model [like this](http://github.com/tlossen/remodel/blob/master/example/book.rb):
 
 	class Book < Remodel::Entity
-	  has_many :chapters, :class => 'Chapter'
+	  has_many :chapters, :class => 'Chapter', :reverse => :book
 	  property :title, :class => 'String'
 	  property :year, :class => 'Integer'
 	end
@@ -68,11 +68,11 @@ now you can do:
 	>> require 'example/book'
 	=> true
 	>> book = Book.create :title => 'Moby Dick', :year => 1851
-	=> #<Book key: "b:1", year: 1851, title: "Moby Dick">
-	>> book.chapters.create :title => 'Ishmael'
-	=> #<Chapter key: "c:1", title: "Ishmael">
-	>> book.chapters.size
-	=> 1
+	=> #<Book(b:3) title: "Moby Dick", year: 1851>
+	>> chapter = book.chapters.create :title => 'Ishmael'
+	=> #<Chapter(c:4) title: "Ishmael">
+	>> chapter.book
+	=> #<Book(b:3) title: "Moby Dick", year: 1851>
 
 
 ## inspired by

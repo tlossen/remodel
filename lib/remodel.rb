@@ -30,15 +30,20 @@ module Remodel
   end
   
   class HasMany < Array
-    def initialize(clazz, key)
+    def initialize(entity, clazz, key, reverse = nil)
       super fetch(clazz, key)
-      @clazz, @key = clazz, key
+      @entity, @clazz, @key, @reverse = entity, clazz, key, reverse
     end
     
     def create(attributes = {})
-      self << created = @clazz.create(attributes)
-      redis.rpush(@key, created.key)
-      created
+      add(@clazz.create(attributes))
+    end
+    
+    def add(entity)
+      entity.send("#{@reverse}=", @entity) if @reverse
+      self << entity
+      redis.rpush(@key, entity.key)
+      entity
     end
 
   private
@@ -87,8 +92,8 @@ module Remodel
     end
     
     def inspect
-      properties = @attributes.merge(:key => key).map { |name, value| "#{name}: #{value.inspect}" }.join(', ')
-      "\#<#{self.class.name} #{properties}>"
+      properties = @attributes.map { |name, value| "#{name}: #{value.inspect}" }.join(', ')
+      "\#<#{self.class.name}(#{key}) #{properties}>"
     end
 
     def self.create(attributes = {})
@@ -125,7 +130,7 @@ module Remodel
           instance_variable_get(var)
         else
           clazz = Entity.find_class(options[:class])
-          instance_variable_set(var, HasMany.new(clazz, "#{key}:#{name}"))
+          instance_variable_set(var, HasMany.new(self, clazz, "#{key}:#{name}", options[:reverse]))
         end
       end
     end

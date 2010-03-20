@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + "/../lib/remodel.rb"
 
 class Book < Remodel::Entity
-  has_many :chapters, :class => 'Chapter'
+  has_many :chapters, :class => 'Chapter', :reverse => :book
   property :title, :class => 'String'
   property :year, :class => 'Integer'
 end
