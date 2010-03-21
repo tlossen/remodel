@@ -134,19 +134,19 @@ module Remodel
 
     def self.property(name, options = {})
       name = name.to_sym
-      clazz = find_class(options[:class])
-      mapper[name] = Remodel.mapper_by_class[clazz]
+      mapper[name] = Remodel.mapper_for(options[:class])
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
     
     def self.has_many(name, options)
       var = "@association_#{name}".to_sym
+      
       define_method(name) do
         if instance_variable_defined? var
           instance_variable_get(var)
         else
-          clazz = Entity.find_class(options[:class])
+          clazz = Remodel.find_class(options[:class])
           instance_variable_set(var, HasMany.new(self, clazz, "#{key}:#{name}", options[:reverse]))
         end
       end
@@ -159,7 +159,7 @@ module Remodel
         if instance_variable_defined? var
           instance_variable_get(var)
         else
-          clazz = Entity.find_class(options[:class])
+          clazz = Remodel.find_class(options[:class])
           value_key = redis.get("#{key}:#{name}")
           instance_variable_set(var, clazz.find(value_key)) if value_key
         end
@@ -208,12 +208,6 @@ module Remodel
     end
     
   private
-  
-    # converts String, Symbol or Class into Class
-    def self.find_class(clazz)
-      return nil unless clazz
-      clazz.to_s.split('::').inject(Kernel) { |mod, name| mod.const_get(name) }
-    end
   
     def self.fetch(key)
       redis.get(key) || raise(EntityNotFound, "no #{name} with key #{key}")
@@ -268,6 +262,18 @@ module Remodel
   
   def self.redis=(redis)
     @redis = redis
+  end
+
+private
+
+  # converts String, Symbol or Class into Class
+  def self.find_class(clazz)
+    return nil unless clazz
+    clazz.to_s.split('::').inject(Kernel) { |mod, name| mod.const_get(name) }
+  end
+
+  def self.mapper_for(clazz)
+    mapper_by_class[find_class(clazz)]
   end
   
   def self.mapper_by_class
