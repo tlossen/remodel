@@ -43,9 +43,9 @@ plus ruby bindings:
 
 		$ rake
 		Started
-		.........................................
-		Finished in 0.044646 seconds.
-		50 tests, 83 assertions, 0 failures, 0 errors
+		.................................................................
+		Finished in 0.063041 seconds.
+		65 tests, 103 assertions, 0 failures, 0 errors
 
 
 ## example
@@ -78,21 +78,19 @@ now you can do:
 ## inspired by
 
 * [how to redis](http://www.paperplanes.de/2009/10/30/how_to_redis.html)
-&mdash; good overview of different mapping options by [mattmatt](http://github.com/mattmatt)
-* [hurl](http://github.com/defunkt/hurl) &mdash; basically i extracted
-defunkts [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb) class 
-into [Remodel::Entity](http://github.com/tlossen/remodel/blob/master/lib/remodel/entity.rb)
+&mdash; good overview of different mapping options by [mattmatt](http://github.com/mattmatt).
+* [hurl](http://github.com/defunkt/hurl) &mdash; basically i started with
+defunkts [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb).
 * [ohm](http://github.com/soveran/ohm) &mdash; object-hash mapping for redis. 
 somewhat similar, but instead of serializing to json, stores each attribute under a separate key.
 
 
 ## todo
 
-* reverse associations: one-to-one, many-to-many
-* `delete`
 * package as gem
 * documentation ([rocco](http://github.com/rtomayko/rocco))
 * benchmarks
+* `delete`
 * `find_by`
 
 
