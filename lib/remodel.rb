@@ -30,9 +30,9 @@ module Remodel
   end
   
   class HasMany < Array
-    def initialize(entity, clazz, key, reverse = nil)
+    def initialize(this, clazz, key, reverse = nil)
       super fetch(clazz, key)
-      @entity, @clazz, @key, @reverse = entity, clazz, key, reverse
+      @this, @clazz, @key, @reverse = this, clazz, key, reverse
     end
     
     def create(attributes = {})
@@ -40,7 +40,7 @@ module Remodel
     end
     
     def add(entity)
-      entity.send("_#{@reverse}=", @entity) if @reverse
+      add_to_reverse_association_of(entity) if @reverse
       _add(entity)
     end
 
@@ -55,6 +55,14 @@ module Remodel
     def _remove(entity)
       delete_if { |x| x.key = entity.key }
       redis.lrem(@key, 0, entity.key)
+    end
+    
+    def add_to_reverse_association_of(entity)
+      if entity.send(@reverse).is_a? HasMany
+        entity.send(@reverse).send(:_add, @this)
+      else
+        entity.send("_#{@reverse}=", @this)
+      end
     end
   
     def fetch(clazz, key)
