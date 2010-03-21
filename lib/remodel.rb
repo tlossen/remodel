@@ -182,6 +182,12 @@ module Remodel
     
   private
   
+    # converts String, Symbol or Class into Class
+    def self.find_class(clazz)
+      return nil unless clazz
+      clazz.to_s.split('::').inject(Kernel) { |mod, name| mod.const_get(name) }
+    end
+  
     def self.fetch(key)
       redis.get(key) || raise(EntityNotFound, "no #{name} with key #{key}")
     end
@@ -192,12 +198,7 @@ module Remodel
     end
   
     def self.key_prefix
-      @key_prefix ||= name[0,1].downcase
-    end
-    
-    # converts String, Symbol or Class into Class
-    def self.find_class(clazz)
-      Kernel.const_get(clazz.to_s) if clazz
+      @key_prefix ||= name.split('::').last[0,1].downcase
     end
     
     def self.parse(json)
