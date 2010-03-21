@@ -48,13 +48,13 @@ module Remodel
   
     def _add(entity)
       self << entity
-      redis.rpush(@key, entity.key)
+      Remodel.redis.rpush(@key, entity.key)
       entity
     end
     
     def _remove(entity)
       delete_if { |x| x.key = entity.key }
-      redis.lrem(@key, 0, entity.key)
+      Remodel.redis.lrem(@key, 0, entity.key)
     end
     
     def add_to_reverse_association_of(entity)
@@ -66,15 +66,11 @@ module Remodel
     end
   
     def fetch(clazz, key)
-      keys = redis.lrange(key, 0, -1)
-      values = keys.empty? ? [] : redis.mget(keys)
+      keys = Remodel.redis.lrange(key, 0, -1)
+      values = keys.empty? ? [] : Remodel.redis.mget(keys)
       keys.zip(values).map do |key, json|
         clazz.restore(key, json) if json
       end.compact
-    end
-    
-    def redis
-      Remodel.redis
     end
   end
   
@@ -91,7 +87,7 @@ module Remodel
     
     def save
       @key = self.class.next_key unless @key
-      self.class.redis.set(@key, to_json)
+      Remodel.redis.set(@key, to_json)
       self
     end
     
@@ -160,7 +156,7 @@ module Remodel
           instance_variable_get(var)
         else
           clazz = Remodel.find_class(options[:class])
-          value_key = redis.get("#{key}:#{name}")
+          value_key = Remodel.redis.get("#{key}:#{name}")
           instance_variable_set(var, clazz.find(value_key)) if value_key
         end
       end
@@ -173,10 +169,10 @@ module Remodel
       define_method("_#{name}=") do |value|
         if value
           instance_variable_set(var, value)
-          redis.set("#{key}:#{name}", value.key)
+          Remodel.redis.set("#{key}:#{name}", value.key)
         else
           remove_instance_variable(var) if instance_variable_defined? var
-          redis.del("#{key}:#{name}")
+          Remodel.redis.del("#{key}:#{name}")
         end
       end
       
@@ -210,11 +206,11 @@ module Remodel
   private
   
     def self.fetch(key)
-      redis.get(key) || raise(EntityNotFound, "no #{name} with key #{key}")
+      Remodel.redis.get(key) || raise(EntityNotFound, "no #{name} with key #{key}")
     end
   
     def self.next_key
-      counter = redis.incr("#{key_prefix}:seq")
+      counter = Remodel.redis.incr("#{key_prefix}:seq")
       "#{key_prefix}:#{counter}"
     end
   
@@ -246,24 +242,16 @@ module Remodel
     def self.mapper
       @mapper ||= {}
     end
-    
-    def self.redis
-      Remodel.redis
-    end
-    
-    def redis
-      Remodel.redis
-    end
-  end
-  
-  def self.redis
-    @redis ||= Redis.new
   end
   
   def self.redis=(redis)
     @redis = redis
   end
 
+  def self.redis
+    @redis ||= Redis.new
+  end
+  
 private
 
   # converts String, Symbol or Class into Class
@@ -289,4 +277,3 @@ private
   end
   
 end
-
