@@ -166,14 +166,7 @@ module Remodel
       end
       
       define_method("#{name}=") do |value|
-        if options[:reverse]
-          if value
-            value.send("#{options[:reverse]}").send("_add", self)
-          else
-            old_value = send(name)
-            old_value.send("#{options[:reverse]}").send("_remove", self) if old_value
-          end
-        end
+        send("_reverse_association_of_#{name}=", value) if options[:reverse]
         send("_#{name}=", value)
       end
       
@@ -185,6 +178,32 @@ module Remodel
           remove_instance_variable(var) if instance_variable_defined? var
           redis.del("#{key}:#{name}")
         end
+      end
+      
+      private "_#{name}="
+
+      if options[:reverse]
+        define_method("_reverse_association_of_#{name}=") do |value|
+          if value
+            association = value.send("#{options[:reverse]}")
+            if association.is_a? HasMany
+              association.send("_add", self)
+            else
+              value.send("_#{options[:reverse]}=", self)
+            end
+          else
+            if old_value = send(name)
+              association = old_value.send("#{options[:reverse]}")
+              if association.is_a? HasMany
+                association.send("_remove", self)
+              else
+                old_value.send("_#{options[:reverse]}=", nil)
+              end
+            end
+          end
+        end
+        
+        private "_reverse_association_of_#{name}="
       end
     end
     
