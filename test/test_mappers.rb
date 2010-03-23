@@ -1,6 +1,7 @@
 require 'helper'
 
 class Item < Remodel::Entity
+  property :boolean, :class => Boolean
   property :string, :class => String
   property :integer, :class => Integer
   property :float, :class => Float
@@ -41,6 +42,7 @@ class TestMappers < Test::Unit::TestCase
     
     should "handle nil values" do
       item = Item.create
+      assert_nil item.boolean
       assert_nil item.string
       assert_nil item.integer
       assert_nil item.float
@@ -51,6 +53,7 @@ class TestMappers < Test::Unit::TestCase
     end
     
     should "reject invalid types" do
+      assert_raise(Remodel::InvalidType) { Item.create :boolean => 'hello' }
       assert_raise(Remodel::InvalidType) { Item.create :string => true }
       assert_raise(Remodel::InvalidType) { Item.create :integer => 33.5 }
       assert_raise(Remodel::InvalidType) { Item.create :float => 5 }

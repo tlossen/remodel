@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
      "bin/redis-monitor.rb",
      "example/book.rb",
      "lib/remodel.rb",
+     "remodel.gemspec",
      "test/helper.rb",
      "test/test_entity.rb",
      "test/test_many_to_many.rb",

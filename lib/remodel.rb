@@ -2,6 +2,10 @@ require 'rubygems'
 require 'redis'
 require 'yajl'
 
+module Boolean; end
+class TrueClass; include Boolean; end
+class FalseClass; include Boolean; end
+
 module Remodel
 
   class Error < ::StandardError; end
@@ -266,6 +270,7 @@ private
   
   def self.mapper_by_class
     @mapper_by_class ||= Hash.new(Mapper.new).merge(
+      Boolean => Mapper.new(Boolean),
       String => Mapper.new(String),
       Integer => Mapper.new(Integer),
       Float => Mapper.new(Float),

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>remodel.rb</title>
+  <link rel="stylesheet" href="http://jashkenas.github.com/docco/resources/docco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <table cellspacing=0 cellpadding=0>
+  <thead>
+    <tr>
+      <th class=docs><h1>remodel.rb</h1></th>
+      <th class=code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr id='section-1'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-1">#</a>
+        </div>
+        
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="nb">require</span> <span class="s1">&#39;rubygems&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;redis&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;yajl&#39;</span>
+
+<span class="k">module</span> <span class="nn">Boolean</span><span class="p">;</span> <span class="k">end</span>
+<span class="k">class</span> <span class="nc">TrueClass</span><span class="p">;</span> <span class="kp">include</span> <span class="no">Boolean</span><span class="p">;</span> <span class="k">end</span>
+<span class="k">class</span> <span class="nc">FalseClass</span><span class="p">;</span> <span class="kp">include</span> <span class="no">Boolean</span><span class="p">;</span> <span class="k">end</span>
+
+<span class="k">module</span> <span class="nn">Remodel</span>
+
+  <span class="k">class</span> <span class="nc">Error</span> <span class="o">&lt;</span> <span class="o">::</span><span class="no">StandardError</span><span class="p">;</span> <span class="k">end</span>
+  <span class="k">class</span> <span class="nc">EntityNotFound</span> <span class="o">&lt;</span> <span class="no">Error</span><span class="p">;</span> <span class="k">end</span>
+  <span class="k">class</span> <span class="nc">EntityNotSaved</span> <span class="o">&lt;</span> <span class="no">Error</span><span class="p">;</span> <span class="k">end</span>
+  <span class="k">class</span> <span class="nc">InvalidKeyPrefix</span> <span class="o">&lt;</span> <span class="no">Error</span><span class="p">;</span> <span class="k">end</span>
+  <span class="k">class</span> <span class="nc">InvalidType</span> <span class="o">&lt;</span> <span class="no">Error</span><span class="p">;</span> <span class="k">end</span>
+  
+  <span class="k">class</span> <span class="nc">Mapper</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">clazz</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">,</span> <span class="n">pack_method</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">,</span> <span class="n">unpack_method</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">)</span>
+      <span class="vi">@clazz</span> <span class="o">=</span> <span class="n">clazz</span>
+      <span class="vi">@pack_method</span> <span class="o">=</span> <span class="n">pack_method</span>
+      <span class="vi">@unpack_method</span> <span class="o">=</span> <span class="n">unpack_method</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kp">nil</span> <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">nil?</span>
+      <span class="k">raise</span><span class="p">(</span><span class="no">InvalidType</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">value</span><span class="o">.</span><span class="n">inspect</span><span class="si">}</span><span class="s2"> is not a </span><span class="si">#{</span><span class="vi">@clazz</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="vi">@clazz</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">value</span><span class="o">.</span><span class="n">is_a?</span><span class="p">(</span><span class="vi">@clazz</span><span class="p">)</span>
+      <span class="vi">@pack_method</span> <span class="p">?</span> <span class="n">value</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="vi">@pack_method</span><span class="p">)</span> <span class="p">:</span> <span class="n">value</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nf">unpack</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+      <span class="k">return</span> <span class="kp">nil</span> <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">nil?</span>
+      <span class="vi">@unpack_method</span> <span class="p">?</span> <span class="vi">@clazz</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="vi">@unpack_method</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="p">:</span> <span class="n">value</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+  
+  <span class="k">class</span> <span class="nc">HasMany</span> <span class="o">&lt;</span> <span class="nb">Array</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">reverse</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">)</span>
+      <span class="k">super</span> <span class="n">fetch</span><span class="p">(</span><span class="n">clazz</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+      <span class="vi">@this</span><span class="p">,</span> <span class="vi">@clazz</span><span class="p">,</span> <span class="vi">@key</span><span class="p">,</span> <span class="vi">@reverse</span> <span class="o">=</span> <span class="n">this</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">reverse</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">{})</span>
+      <span class="n">add</span><span class="p">(</span><span class="vi">@clazz</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">attributes</span><span class="p">))</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+      <span class="n">add_to_reverse_association_of</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span> <span class="k">if</span> <span class="vi">@reverse</span>
+      <span class="n">_add</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+    <span class="k">end</span>
+
+  <span class="kp">private</span>
+  
+    <span class="k">def</span> <span class="nf">_add</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+      <span class="nb">self</span> <span class="o">&lt;&lt;</span> <span class="n">entity</span>
+      <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">rpush</span><span class="p">(</span><span class="vi">@key</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+      <span class="n">entity</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nf">_remove</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+      <span class="n">delete_if</span> <span class="p">{</span> <span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">x</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">key</span> <span class="p">}</span>
+      <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">lrem</span><span class="p">(</span><span class="vi">@key</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nf">add_to_reverse_association_of</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="vi">@reverse</span><span class="p">)</span><span class="o">.</span><span class="n">is_a?</span> <span class="no">HasMany</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="vi">@reverse</span><span class="p">)</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="ss">:_add</span><span class="p">,</span> <span class="vi">@this</span><span class="p">)</span>
+      <span class="k">else</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;_</span><span class="si">#{</span><span class="vi">@reverse</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">,</span> <span class="vi">@this</span><span class="p">)</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+  
+    <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="n">clazz</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+      <span class="n">keys</span> <span class="o">=</span> <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">lrange</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+      <span class="n">values</span> <span class="o">=</span> <span class="n">keys</span><span class="o">.</span><span class="n">empty?</span> <span class="p">?</span> <span class="o">[]</span> <span class="p">:</span> <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">mget</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+      <span class="n">keys</span><span class="o">.</span><span class="n">zip</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">map</span> <span class="k">do</span> <span class="o">|</span><span class="n">key</span><span class="p">,</span> <span class="n">json</span><span class="o">|</span>
+        <span class="n">clazz</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">json</span><span class="p">)</span> <span class="k">if</span> <span class="n">json</span>
+      <span class="k">end</span><span class="o">.</span><span class="n">compact</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+  
+  <span class="k">class</span> <span class="nc">Entity</span>
+    <span class="kp">attr_accessor</span> <span class="ss">:key</span>
+    
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">key</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">)</span>
+      <span class="vi">@attributes</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="vi">@key</span> <span class="o">=</span> <span class="n">key</span>
+      <span class="n">attributes</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="nb">name</span><span class="p">,</span> <span class="n">value</span><span class="o">|</span>
+        <span class="nb">send</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">respond_to?</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nf">save</span>
+      <span class="vi">@key</span> <span class="o">=</span> <span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">next_key</span> <span class="k">unless</span> <span class="vi">@key</span>
+      <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="vi">@key</span><span class="p">,</span> <span class="n">to_json</span><span class="p">)</span>
+      <span class="nb">self</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nf">reload</span>
+      <span class="k">raise</span> <span class="no">EntityNotSaved</span> <span class="k">unless</span> <span class="vi">@key</span>
+      <span class="kp">initialize</span><span class="p">(</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="vi">@key</span><span class="p">)),</span> <span class="vi">@key</span><span class="p">)</span>
+      <span class="nb">instance_variables</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">var</span><span class="o">|</span>
+        <span class="n">remove_instance_variable</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="k">if</span> <span class="n">var</span> <span class="o">=~</span> <span class="sr">/^@association_/</span>
+      <span class="k">end</span>
+      <span class="nb">self</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nf">to_json</span>
+      <span class="no">Yajl</span><span class="o">::</span><span class="no">Encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="vi">@attributes</span><span class="p">))</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nf">inspect</span>
+      <span class="n">properties</span> <span class="o">=</span> <span class="vi">@attributes</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="o">|</span><span class="nb">name</span><span class="p">,</span> <span class="n">value</span><span class="o">|</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">value</span><span class="o">.</span><span class="n">inspect</span><span class="si">}</span><span class="s2">&quot;</span> <span class="p">}</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span>
+      <span class="s2">&quot;</span><span class="se">\#</span><span class="s2">&lt;</span><span class="si">#{</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">(</span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">) </span><span class="si">#{</span><span class="n">properties</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">create</span><span class="p">(</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">{})</span>
+      <span class="kp">new</span><span class="p">(</span><span class="n">attributes</span><span class="p">)</span><span class="o">.</span><span class="n">save</span>
+    <span class="k">end</span>
+  
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">find</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+      <span class="n">restore</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">fetch</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">restore</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">json</span><span class="p">)</span>
+      <span class="kp">new</span><span class="p">(</span><span class="n">parse</span><span class="p">(</span><span class="n">json</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span>
+    <span class="k">end</span>
+    
+  <span class="kp">protected</span>
+
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">set_key_prefix</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+      <span class="k">raise</span><span class="p">(</span><span class="no">InvalidKeyPrefix</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span> <span class="k">unless</span> <span class="n">prefix</span> <span class="o">=~</span> <span class="sr">/^[a-z]+$/</span>
+      <span class="vi">@key_prefix</span> <span class="o">=</span> <span class="n">prefix</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">property</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">options</span> <span class="o">=</span> <span class="p">{})</span>
+      <span class="nb">name</span> <span class="o">=</span> <span class="nb">name</span><span class="o">.</span><span class="n">to_sym</span>
+      <span class="n">mapper</span><span class="o">[</span><span class="nb">name</span><span class="o">]</span> <span class="o">=</span> <span class="no">Remodel</span><span class="o">.</span><span class="n">mapper_for</span><span class="p">(</span><span class="n">options</span><span class="o">[</span><span class="ss">:class</span><span class="o">]</span><span class="p">)</span>
+      <span class="n">define_method</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span> <span class="p">{</span> <span class="vi">@attributes</span><span class="o">[</span><span class="nb">name</span><span class="o">]</span> <span class="p">}</span>
+      <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">)</span> <span class="p">{</span> <span class="o">|</span><span class="n">value</span><span class="o">|</span> <span class="vi">@attributes</span><span class="o">[</span><span class="nb">name</span><span class="o">]</span> <span class="o">=</span> <span class="n">value</span> <span class="p">}</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">has_many</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+      <span class="n">var</span> <span class="o">=</span> <span class="s2">&quot;@association_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">to_sym</span>
+      
+      <span class="n">define_method</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span> <span class="k">do</span>
+        <span class="k">if</span> <span class="n">instance_variable_defined?</span> <span class="n">var</span>
+          <span class="nb">instance_variable_get</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+        <span class="k">else</span>
+          <span class="n">clazz</span> <span class="o">=</span> <span class="no">Remodel</span><span class="o">.</span><span class="n">find_class</span><span class="p">(</span><span class="n">options</span><span class="o">[</span><span class="ss">:class</span><span class="o">]</span><span class="p">)</span>
+          <span class="nb">instance_variable_set</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="no">HasMany</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">self</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">:</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">[</span><span class="ss">:reverse</span><span class="o">]</span><span class="p">))</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">has_one</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+      <span class="n">var</span> <span class="o">=</span> <span class="s2">&quot;@association_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">to_sym</span>
+      
+      <span class="n">define_method</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span> <span class="k">do</span>
+        <span class="k">if</span> <span class="n">instance_variable_defined?</span> <span class="n">var</span>
+          <span class="nb">instance_variable_get</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+        <span class="k">else</span>
+          <span class="n">clazz</span> <span class="o">=</span> <span class="no">Remodel</span><span class="o">.</span><span class="n">find_class</span><span class="p">(</span><span class="n">options</span><span class="o">[</span><span class="ss">:class</span><span class="o">]</span><span class="p">)</span>
+          <span class="n">value_key</span> <span class="o">=</span> <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">:</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+          <span class="nb">instance_variable_set</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">clazz</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">value_key</span><span class="p">))</span> <span class="k">if</span> <span class="n">value_key</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+      
+      <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">value</span><span class="o">|</span>
+        <span class="nb">send</span><span class="p">(</span><span class="s2">&quot;_reverse_association_of_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="n">options</span><span class="o">[</span><span class="ss">:reverse</span><span class="o">]</span>
+        <span class="nb">send</span><span class="p">(</span><span class="s2">&quot;_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+      <span class="k">end</span>
+      
+      <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">value</span><span class="o">|</span>
+        <span class="k">if</span> <span class="n">value</span>
+          <span class="nb">instance_variable_set</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+          <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">:</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span>
+          <span class="n">remove_instance_variable</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="k">if</span> <span class="n">instance_variable_defined?</span> <span class="n">var</span>
+          <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">del</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">:</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+      
+      <span class="kp">private</span> <span class="s2">&quot;_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span>
+
+      <span class="k">if</span> <span class="n">options</span><span class="o">[</span><span class="ss">:reverse</span><span class="o">]</span>
+        <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;_reverse_association_of_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">value</span><span class="o">|</span>
+          <span class="k">if</span> <span class="n">value</span>
+            <span class="n">association</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">options</span><span class="o">[</span><span class="ss">:reverse</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">association</span><span class="o">.</span><span class="n">is_a?</span> <span class="no">HasMany</span>
+              <span class="n">association</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;_add&quot;</span><span class="p">,</span> <span class="nb">self</span><span class="p">)</span>
+            <span class="k">else</span>
+              <span class="n">value</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;_</span><span class="si">#{</span><span class="n">options</span><span class="o">[</span><span class="ss">:reverse</span><span class="o">]</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">,</span> <span class="nb">self</span><span class="p">)</span>
+            <span class="k">end</span>
+          <span class="k">else</span>
+            <span class="k">if</span> <span class="n">old_value</span> <span class="o">=</span> <span class="nb">send</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
+              <span class="n">association</span> <span class="o">=</span> <span class="n">old_value</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">options</span><span class="o">[</span><span class="ss">:reverse</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+              <span class="k">if</span> <span class="n">association</span><span class="o">.</span><span class="n">is_a?</span> <span class="no">HasMany</span>
+                <span class="n">association</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;_remove&quot;</span><span class="p">,</span> <span class="nb">self</span><span class="p">)</span>
+              <span class="k">else</span>
+                <span class="n">old_value</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;_</span><span class="si">#{</span><span class="n">options</span><span class="o">[</span><span class="ss">:reverse</span><span class="o">]</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">,</span> <span class="kp">nil</span><span class="p">)</span>
+              <span class="k">end</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+        <span class="k">end</span>
+        
+        <span class="kp">private</span> <span class="s2">&quot;_reverse_association_of_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+    
+  <span class="kp">private</span>
+  
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">fetch</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+      <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">||</span> <span class="k">raise</span><span class="p">(</span><span class="no">EntityNotFound</span><span class="p">,</span> <span class="s2">&quot;no </span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2"> with key </span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">end</span>
+  
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">next_key</span>
+      <span class="n">counter</span> <span class="o">=</span> <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">incr</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">key_prefix</span><span class="si">}</span><span class="s2">:seq&quot;</span><span class="p">)</span>
+      <span class="s2">&quot;</span><span class="si">#{</span><span class="n">key_prefix</span><span class="si">}</span><span class="s2">:</span><span class="si">#{</span><span class="n">counter</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">end</span>
+  
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">key_prefix</span>
+      <span class="vi">@key_prefix</span> <span class="o">||=</span> <span class="nb">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;::&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="o">].</span><span class="n">downcase</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">parse</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
+      <span class="n">unpack</span><span class="p">(</span><span class="no">Yajl</span><span class="o">::</span><span class="no">Parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">json</span><span class="p">))</span>
+    <span class="k">end</span>
+  
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">pack</span><span class="p">(</span><span class="n">attributes</span><span class="p">)</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="n">attributes</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="nb">name</span><span class="p">,</span> <span class="n">value</span><span class="o">|</span>
+        <span class="n">result</span><span class="o">[</span><span class="nb">name</span><span class="o">]</span> <span class="o">=</span> <span class="n">mapper</span><span class="o">[</span><span class="nb">name</span><span class="o">].</span><span class="n">pack</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+      <span class="k">end</span>
+      <span class="n">result</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">unpack</span><span class="p">(</span><span class="n">attributes</span><span class="p">)</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="n">attributes</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="nb">name</span><span class="p">,</span> <span class="n">value</span><span class="o">|</span>
+        <span class="nb">name</span> <span class="o">=</span> <span class="nb">name</span><span class="o">.</span><span class="n">to_sym</span>
+        <span class="n">result</span><span class="o">[</span><span class="nb">name</span><span class="o">]</span> <span class="o">=</span> <span class="n">mapper</span><span class="o">[</span><span class="nb">name</span><span class="o">].</span><span class="n">unpack</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+      <span class="k">end</span>
+      <span class="n">result</span>
+    <span class="k">end</span>
+    
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">mapper</span>
+      <span class="vi">@mapper</span> <span class="o">||=</span> <span class="p">{}</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+  
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">redis</span><span class="o">=</span><span class="p">(</span><span class="n">redis</span><span class="p">)</span>
+    <span class="vi">@redis</span> <span class="o">=</span> <span class="n">redis</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">redis</span>
+    <span class="vi">@redis</span> <span class="o">||=</span> <span class="no">Redis</span><span class="o">.</span><span class="n">new</span>
+  <span class="k">end</span>
+  
+<span class="kp">private</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-2'>
+      <td class=docs>
+        <div class="octowrap">
+          <a class="octothorpe" href="#section-2">#</a>
+        </div>
+        <p> converts String, Symbol or Class into Class</p>
+
+      </td>
+      <td class=code>
+        <div class='highlight'><pre>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">find_class</span><span class="p">(</span><span class="n">clazz</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kp">nil</span> <span class="k">unless</span> <span class="n">clazz</span>
+    <span class="n">clazz</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;::&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="no">Kernel</span><span class="p">)</span> <span class="p">{</span> <span class="o">|</span><span class="n">mod</span><span class="p">,</span> <span class="nb">name</span><span class="o">|</span> <span class="n">mod</span><span class="o">.</span><span class="n">const_get</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span> <span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">mapper_for</span><span class="p">(</span><span class="n">clazz</span><span class="p">)</span>
+    <span class="n">mapper_by_class</span><span class="o">[</span><span class="n">find_class</span><span class="p">(</span><span class="n">clazz</span><span class="p">)</span><span class="o">]</span>
+  <span class="k">end</span>
+  
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">mapper_by_class</span>
+    <span class="vi">@mapper_by_class</span> <span class="o">||=</span> <span class="no">Hash</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">)</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+      <span class="no">Boolean</span> <span class="o">=&gt;</span> <span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">Boolean</span><span class="p">),</span>
+      <span class="nb">String</span> <span class="o">=&gt;</span> <span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">String</span><span class="p">),</span>
+      <span class="nb">Integer</span> <span class="o">=&gt;</span> <span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">Integer</span><span class="p">),</span>
+      <span class="nb">Float</span> <span class="o">=&gt;</span> <span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">Float</span><span class="p">),</span>
+      <span class="nb">Array</span> <span class="o">=&gt;</span> <span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">Array</span><span class="p">),</span>
+      <span class="no">Hash</span> <span class="o">=&gt;</span> <span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">Hash</span><span class="p">),</span>
+      <span class="no">Date</span> <span class="o">=&gt;</span> <span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">Date</span><span class="p">,</span> <span class="ss">:to_s</span><span class="p">,</span> <span class="ss">:parse</span><span class="p">),</span>
+      <span class="no">Time</span> <span class="o">=&gt;</span> <span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">Time</span><span class="p">,</span> <span class="ss">:to_i</span><span class="p">,</span> <span class="ss">:at</span><span class="p">)</span>
+    <span class="p">)</span>
+  <span class="k">end</span>
+  
+<span class="k">end</span></pre></div>
+      </td>
+    </tr>
+    </table>
+</div>
+</body>
