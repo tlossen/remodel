@@ -87,7 +87,6 @@ somewhat similar, but instead of serializing to json, stores each attribute unde
 
 ## todo
 
-* package as gem
 * documentation ([rocco](http://github.com/rtomayko/rocco))
 * benchmarks
 * `delete`
