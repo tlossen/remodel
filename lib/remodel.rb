@@ -6,6 +6,12 @@ module Boolean; end
 true.extend Boolean
 false.extend Boolean
 
+# converts String, Symbol or Class into Class
+def Kernel.find_class(clazz)
+  return nil unless clazz
+  clazz.to_s.split('::').inject(Kernel) { |mod, name| mod.const_get(name) }
+end
+
 module Remodel
 
   class Error < ::StandardError; end
@@ -146,7 +152,7 @@ module Remodel
         if instance_variable_defined? var
           instance_variable_get(var)
         else
-          clazz = Remodel.find_class(options[:class])
+          clazz = Kernel.find_class(options[:class])
           instance_variable_set(var, HasMany.new(self, clazz, "#{key}:#{name}", options[:reverse]))
         end
       end
@@ -159,7 +165,7 @@ module Remodel
         if instance_variable_defined? var
           instance_variable_get(var)
         else
-          clazz = Remodel.find_class(options[:class])
+          clazz = Kernel.find_class(options[:class])
           value_key = Remodel.redis.get("#{key}:#{name}")
           instance_variable_set(var, clazz.find(value_key)) if value_key
         end
@@ -258,14 +264,8 @@ module Remodel
   
 private
 
-  # converts String, Symbol or Class into Class
-  def self.find_class(clazz)
-    return nil unless clazz
-    clazz.to_s.split('::').inject(Kernel) { |mod, name| mod.const_get(name) }
-  end
-
   def self.mapper_for(clazz)
-    mapper_by_class[find_class(clazz)]
+    mapper_by_class[Kernel.find_class(clazz)]
   end
   
   def self.mapper_by_class
