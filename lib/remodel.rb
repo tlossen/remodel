@@ -13,6 +13,14 @@ def Kernel.find_class(clazz)
 end
 
 module Remodel
+  
+  def self.redis=(redis)
+    @redis = redis
+  end
+
+  def self.redis
+    @redis ||= Redis.new
+  end
 
   class Error < ::StandardError; end
   class EntityNotFound < Error; end
@@ -37,6 +45,23 @@ module Remodel
       return nil if value.nil?
       @unpack_method ? @clazz.send(@unpack_method, value) : value
     end
+  end
+  
+  def self.mapper_by_class
+    @mapper_by_class ||= Hash.new(Mapper.new).merge(
+      Boolean => Mapper.new(Boolean),
+      String => Mapper.new(String),
+      Integer => Mapper.new(Integer),
+      Float => Mapper.new(Float),
+      Array => Mapper.new(Array),
+      Hash => Mapper.new(Hash),
+      Date => Mapper.new(Date, :to_s, :parse),
+      Time => Mapper.new(Time, :to_i, :at)
+    )
+  end
+  
+  def self.mapper_for(clazz)
+    mapper_by_class[Kernel.find_class(clazz)]
   end
   
   class HasMany < Array
@@ -253,32 +278,5 @@ module Remodel
       @mapper ||= {}
     end
   end
-  
-  def self.redis=(redis)
-    @redis = redis
-  end
-
-  def self.redis
-    @redis ||= Redis.new
-  end
-  
-private
-
-  def self.mapper_for(clazz)
-    mapper_by_class[Kernel.find_class(clazz)]
-  end
-  
-  def self.mapper_by_class
-    @mapper_by_class ||= Hash.new(Mapper.new).merge(
-      Boolean => Mapper.new(Boolean),
-      String => Mapper.new(String),
-      Integer => Mapper.new(Integer),
-      Float => Mapper.new(Float),
-      Array => Mapper.new(Array),
-      Hash => Mapper.new(Hash),
-      Date => Mapper.new(Date, :to_s, :parse),
-      Time => Mapper.new(Time, :to_i, :at)
-    )
-  end
-  
+    
 end
