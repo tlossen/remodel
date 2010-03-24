@@ -14,6 +14,12 @@ end
 
 module Remodel
   
+  class Error < ::StandardError; end
+  class EntityNotFound < Error; end
+  class EntityNotSaved < Error; end
+  class InvalidKeyPrefix < Error; end
+  class InvalidType < Error; end
+  
   def self.redis=(redis)
     @redis = redis
   end
@@ -22,12 +28,6 @@ module Remodel
     @redis ||= Redis.new
   end
 
-  class Error < ::StandardError; end
-  class EntityNotFound < Error; end
-  class EntityNotSaved < Error; end
-  class InvalidKeyPrefix < Error; end
-  class InvalidType < Error; end
-  
   class Mapper
     def initialize(clazz = nil, pack_method = nil, unpack_method = nil)
       @clazz = clazz
@@ -63,52 +63,7 @@ module Remodel
   def self.mapper_for(clazz)
     mapper_by_class[Kernel.find_class(clazz)]
   end
-  
-  class HasMany < Array
-    def initialize(this, clazz, key, reverse = nil)
-      super fetch(clazz, key)
-      @this, @clazz, @key, @reverse = this, clazz, key, reverse
-    end
     
-    def create(attributes = {})
-      add(@clazz.create(attributes))
-    end
-    
-    def add(entity)
-      add_to_reverse_association_of(entity) if @reverse
-      _add(entity)
-    end
-
-  private
-  
-    def _add(entity)
-      self << entity
-      Remodel.redis.rpush(@key, entity.key)
-      entity
-    end
-    
-    def _remove(entity)
-      delete_if { |x| x.key = entity.key }
-      Remodel.redis.lrem(@key, 0, entity.key)
-    end
-    
-    def add_to_reverse_association_of(entity)
-      if entity.send(@reverse).is_a? HasMany
-        entity.send(@reverse).send(:_add, @this)
-      else
-        entity.send("_#{@reverse}=", @this)
-      end
-    end
-  
-    def fetch(clazz, key)
-      keys = Remodel.redis.lrange(key, 0, -1)
-      values = keys.empty? ? [] : Remodel.redis.mget(keys)
-      keys.zip(values).map do |key, json|
-        clazz.restore(key, json) if json
-      end.compact
-    end
-  end
-  
   class Entity
     attr_accessor :key
     
@@ -168,6 +123,51 @@ module Remodel
       mapper[name] = Remodel.mapper_for(options[:class])
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
+    end
+    
+    class HasMany < Array
+      def initialize(this, clazz, key, reverse = nil)
+        super fetch(clazz, key)
+        @this, @clazz, @key, @reverse = this, clazz, key, reverse
+      end
+
+      def create(attributes = {})
+        add(@clazz.create(attributes))
+      end
+
+      def add(entity)
+        add_to_reverse_association_of(entity) if @reverse
+        _add(entity)
+      end
+
+    private
+
+      def _add(entity)
+        self << entity
+        Remodel.redis.rpush(@key, entity.key)
+        entity
+      end
+
+      def _remove(entity)
+        delete_if { |x| x.key = entity.key }
+        Remodel.redis.lrem(@key, 0, entity.key)
+      end
+
+      def add_to_reverse_association_of(entity)
+        if entity.send(@reverse).is_a? HasMany
+          entity.send(@reverse).send(:_add, @this)
+        else
+          entity.send("_#{@reverse}=", @this)
+        end
+      end
+
+      def fetch(clazz, key)
+        keys = Remodel.redis.lrange(key, 0, -1)
+        values = keys.empty? ? [] : Remodel.redis.mget(keys)
+        keys.zip(values).map do |key, json|
+          clazz.restore(key, json) if json
+        end.compact
+      end
     end
     
     def self.has_many(name, options)
