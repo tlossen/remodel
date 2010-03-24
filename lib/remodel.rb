@@ -3,8 +3,8 @@ require 'redis'
 require 'yajl'
 
 module Boolean; end
-class TrueClass; include Boolean; end
-class FalseClass; include Boolean; end
+true.extend Boolean
+false.extend Boolean
 
 module Remodel
 
