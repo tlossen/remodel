@@ -1,78 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta http-equiv="content-type" content="text/html;charset=utf-8">
-  <title>remodel.rb</title>
-  <link rel="stylesheet" href="http://jashkenas.github.com/docco/resources/docco.css">
-</head>
-<body>
-<div id='container'>
-  <div id="background"></div>
-  <table cellspacing=0 cellpadding=0>
-  <thead>
-    <tr>
-      <th class=docs><h1>remodel.rb</h1></th>
-      <th class=code></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr id='section-1'>
-      <td class=docs>
-        <div class="octowrap">
-          <a class="octothorpe" href="#section-1">#</a>
-        </div>
-        
-      </td>
-      <td class=code>
-        <div class='highlight'><pre><span class="nb">require</span> <span class="s1">&#39;rubygems&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;redis&#39;</span>
-<span class="nb">require</span> <span class="s1">&#39;yajl&#39;</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-2'>
-      <td class=docs>
-        <div class="octowrap">
-          <a class="octothorpe" href="#section-2">#</a>
-        </div>
-        <p> Let&rsquo;s start with some monkeypatching &hellip;</p>
-      </td>
-      <td class=code>
-        <div class='highlight'><pre><span class="k">module</span> <span class="nn">Boolean</span><span class="p">;</span> <span class="k">end</span>
-<span class="kp">true</span><span class="o">.</span><span class="n">extend</span> <span class="no">Boolean</span>
-<span class="kp">false</span><span class="o">.</span><span class="n">extend</span> <span class="no">Boolean</span></pre></div>
-      </td>
-    </tr>
-    <tr id='section-3'>
-      <td class=docs>
-        <div class="octowrap">
-          <a class="octothorpe" href="#section-3">#</a>
-        </div>
-        <p> converts String, Symbol or Class into Class</p>
-
-      </td>
-      <td class=code>
-        <div class='highlight'><pre><span class="k">def</span> <span class="nc">Class</span><span class="o">.</span><span class="nf">[]</span><span class="p">(</span><span class="n">clazz</span><span class="p">)</span>
-  <span class="k">return</span> <span class="kp">nil</span> <span class="k">unless</span> <span class="n">clazz</span>
+<!DOCTYPE html>  <html> <head>   <title>remodel.rb</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               remodel.rb             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-1">#</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;rubygems&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;redis&#39;</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-2">#</a>               </div>               <p>Use the superfast <a href="http://github.com/brianmario/yajl-ruby">YAJL</a> lib to parse <a href="http://json.org/">JSON</a>, if available.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="k">begin</span>
+  <span class="nb">require</span> <span class="s1">&#39;yajl/json_gem&#39;</span>
+<span class="k">rescue</span> <span class="no">LoadError</span>
+  <span class="nb">require</span> <span class="s1">&#39;json&#39;</span>
+<span class="k">end</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-3">#</a>               </div>               <h3>Monkey patches</h3>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-4">#</a>               </div>               <p>Define <code>Boolean</code> as the superclass of <code>true</code> and <code>false</code>.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="k">module</span> <span class="nn">Boolean</span><span class="p">;</span> <span class="k">end</span>
+<span class="kp">true</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="no">Boolean</span><span class="p">)</span> 
+<span class="kp">false</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="no">Boolean</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-5">#</a>               </div>               <p>Find the <code>Class</code> object for a given class name, which can be a <code>String</code> or <code>Symbol</code> (or <code>Class</code>).</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="k">def</span> <span class="nc">Class</span><span class="o">.</span><span class="nf">[]</span><span class="p">(</span><span class="n">clazz</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">clazz</span> <span class="k">if</span> <span class="n">clazz</span><span class="o">.</span><span class="n">nil?</span> <span class="ow">or</span> <span class="n">clazz</span><span class="o">.</span><span class="n">is_a?</span><span class="p">(</span><span class="no">Class</span><span class="p">)</span>
   <span class="n">clazz</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;::&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="no">Kernel</span><span class="p">)</span> <span class="p">{</span> <span class="o">|</span><span class="n">mod</span><span class="p">,</span> <span class="nb">name</span><span class="o">|</span> <span class="n">mod</span><span class="o">.</span><span class="n">const_get</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span> <span class="p">}</span>
-<span class="k">end</span>
+<span class="k">end</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-6">#</a>               </div>               <h3>Remodel</h3>             </td>             <td class="code">               <div class="highlight"><pre><span class="k">module</span> <span class="nn">Remodel</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-7">#</a>               </div>               <p>By default, we expect to find the redis server on <code>localhost:6379</code> &mdash;
+otherwise you will have to set <code>Remodel.redis</code> to a suitably initialized redis client.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">redis</span>
+    <span class="vi">@redis</span> <span class="o">||=</span> <span class="no">Redis</span><span class="o">.</span><span class="n">new</span>
+  <span class="k">end</span>
 
-<span class="k">module</span> <span class="nn">Remodel</span>
-  
-  <span class="k">class</span> <span class="nc">Error</span> <span class="o">&lt;</span> <span class="o">::</span><span class="no">StandardError</span><span class="p">;</span> <span class="k">end</span>
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">redis</span><span class="o">=</span><span class="p">(</span><span class="n">redis</span><span class="p">)</span>
+    <span class="vi">@redis</span> <span class="o">=</span> <span class="n">redis</span>
+  <span class="k">end</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-8">#</a>               </div>               <p>Custom errors</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">class</span> <span class="nc">Error</span> <span class="o">&lt;</span> <span class="o">::</span><span class="no">StandardError</span><span class="p">;</span> <span class="k">end</span>
   <span class="k">class</span> <span class="nc">EntityNotFound</span> <span class="o">&lt;</span> <span class="no">Error</span><span class="p">;</span> <span class="k">end</span>
   <span class="k">class</span> <span class="nc">EntityNotSaved</span> <span class="o">&lt;</span> <span class="no">Error</span><span class="p">;</span> <span class="k">end</span>
   <span class="k">class</span> <span class="nc">InvalidKeyPrefix</span> <span class="o">&lt;</span> <span class="no">Error</span><span class="p">;</span> <span class="k">end</span>
   <span class="k">class</span> <span class="nc">InvalidType</span> <span class="o">&lt;</span> <span class="no">Error</span><span class="p">;</span> <span class="k">end</span>
-  
-  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">redis</span><span class="o">=</span><span class="p">(</span><span class="n">redis</span><span class="p">)</span>
-    <span class="vi">@redis</span> <span class="o">=</span> <span class="n">redis</span>
-  <span class="k">end</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-9">#</a>               </div>               <h3>Mapper</h3>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-10">#</a>               </div>               <p>A mapper converts a given value into a native JSON value &mdash;
+<em>nil</em>, <em>true</em>, <em>false</em>, <em>Number</em>, <em>String</em>, <em>Hash</em>, <em>Array</em> &mdash; via <code>pack</code>,
+and back again via <code>unpack</code>.</p>
 
-  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">redis</span>
-    <span class="vi">@redis</span> <span class="o">||=</span> <span class="no">Redis</span><span class="o">.</span><span class="n">new</span>
-  <span class="k">end</span>
-
-  <span class="k">class</span> <span class="nc">Mapper</span>
+<p>Without any arguments, <code>Mapper.new</code> returns the identity mapper, which maps every value into itself.
+If <code>clazz</code> is set, the mapper rejects any value which is not of the given type.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">class</span> <span class="nc">Mapper</span>
     <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">clazz</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">,</span> <span class="n">pack_method</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">,</span> <span class="n">unpack_method</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">)</span>
       <span class="vi">@clazz</span> <span class="o">=</span> <span class="n">clazz</span>
       <span class="vi">@pack_method</span> <span class="o">=</span> <span class="n">pack_method</span>
@@ -89,9 +43,8 @@
       <span class="k">return</span> <span class="kp">nil</span> <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">nil?</span>
       <span class="vi">@unpack_method</span> <span class="p">?</span> <span class="vi">@clazz</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="vi">@unpack_method</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="p">:</span> <span class="n">value</span>
     <span class="k">end</span>
-  <span class="k">end</span>
-
-  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">mapper_by_class</span>
+  <span class="k">end</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-11">#</a>               </div>               <p>So let's define some handy mappers for common types, and a way to look them up.
+If no mapper is defined for a given class, the identity mapper is used.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">mapper_by_class</span>
     <span class="vi">@mapper_by_class</span> <span class="o">||=</span> <span class="no">Hash</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">)</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
       <span class="no">Boolean</span> <span class="o">=&gt;</span> <span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">Boolean</span><span class="p">),</span>
       <span class="nb">String</span> <span class="o">=&gt;</span> <span class="no">Mapper</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">String</span><span class="p">),</span>
@@ -106,11 +59,9 @@
 
   <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">mapper_for</span><span class="p">(</span><span class="n">clazz</span><span class="p">)</span>
     <span class="n">mapper_by_class</span><span class="o">[</span><span class="no">Class</span><span class="o">[</span><span class="n">clazz</span><span class="o">]]</span>
-  <span class="k">end</span>
-
-  <span class="k">class</span> <span class="nc">HasMany</span> <span class="o">&lt;</span> <span class="nb">Array</span>
+  <span class="k">end</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-12">#</a>               </div>               <h3>HasMany</h3>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-13">#</a>               </div>               <p>Represents the many-end of a many-to-one or many-to-many association.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">class</span> <span class="nc">HasMany</span> <span class="o">&lt;</span> <span class="nb">Array</span>
     <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">reverse</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">)</span>
-      <span class="k">super</span> <span class="n">fetch</span><span class="p">(</span><span class="n">clazz</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+      <span class="k">super</span> <span class="n">_fetch</span><span class="p">(</span><span class="n">clazz</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
       <span class="vi">@this</span><span class="p">,</span> <span class="vi">@clazz</span><span class="p">,</span> <span class="vi">@key</span><span class="p">,</span> <span class="vi">@reverse</span> <span class="o">=</span> <span class="n">this</span><span class="p">,</span> <span class="n">clazz</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">reverse</span>
     <span class="k">end</span>
 
@@ -119,7 +70,7 @@
     <span class="k">end</span>
 
     <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
-      <span class="n">add_to_reverse_association_of</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span> <span class="k">if</span> <span class="vi">@reverse</span>
+      <span class="n">_add_to_reverse_association_of</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span> <span class="k">if</span> <span class="vi">@reverse</span>
       <span class="n">_add</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
     <span class="k">end</span>
 
@@ -136,7 +87,7 @@
       <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">lrem</span><span class="p">(</span><span class="vi">@key</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
     <span class="k">end</span>
 
-    <span class="k">def</span> <span class="nf">add_to_reverse_association_of</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_add_to_reverse_association_of</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
       <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="vi">@reverse</span><span class="p">)</span><span class="o">.</span><span class="n">is_a?</span> <span class="no">HasMany</span>
         <span class="n">entity</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="vi">@reverse</span><span class="p">)</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="ss">:_add</span><span class="p">,</span> <span class="vi">@this</span><span class="p">)</span>
       <span class="k">else</span>
@@ -144,7 +95,7 @@
       <span class="k">end</span>
     <span class="k">end</span>
 
-    <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="n">clazz</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_fetch</span><span class="p">(</span><span class="n">clazz</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
       <span class="n">keys</span> <span class="o">=</span> <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">lrange</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
       <span class="n">values</span> <span class="o">=</span> <span class="n">keys</span><span class="o">.</span><span class="n">empty?</span> <span class="p">?</span> <span class="o">[]</span> <span class="p">:</span> <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">mget</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
       <span class="n">keys</span><span class="o">.</span><span class="n">zip</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">map</span> <span class="k">do</span> <span class="o">|</span><span class="n">key</span><span class="p">,</span> <span class="n">json</span><span class="o">|</span>
@@ -152,8 +103,7 @@
       <span class="k">end</span><span class="o">.</span><span class="n">compact</span>
     <span class="k">end</span>
   <span class="k">end</span>
-
-  <span class="k">class</span> <span class="nc">Entity</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-14">#</a>               </div>               <h3>Entity</h3>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-15">#</a>               </div>               <p>The superclass of all persistent remodel entities.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">class</span> <span class="nc">Entity</span>
     <span class="kp">attr_accessor</span> <span class="ss">:key</span>
     
     <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">key</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">)</span>
@@ -180,7 +130,7 @@
     <span class="k">end</span>
 
     <span class="k">def</span> <span class="nf">to_json</span>
-      <span class="no">Yajl</span><span class="o">::</span><span class="no">Encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="vi">@attributes</span><span class="p">))</span>
+      <span class="no">JSON</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="vi">@attributes</span><span class="p">))</span>
     <span class="k">end</span>
     
     <span class="k">def</span> <span class="nf">inspect</span>
@@ -199,8 +149,7 @@
     <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">restore</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">json</span><span class="p">)</span>
       <span class="kp">new</span><span class="p">(</span><span class="n">parse</span><span class="p">(</span><span class="n">json</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span>
     <span class="k">end</span>
-    
-  <span class="kp">protected</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-16">#</a>               </div>               <h3>DSL for subclasses</h3>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="kp">protected</span>
 
     <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">set_key_prefix</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
       <span class="k">raise</span><span class="p">(</span><span class="no">InvalidKeyPrefix</span><span class="p">,</span> <span class="n">prefix</span><span class="p">)</span> <span class="k">unless</span> <span class="n">prefix</span> <span class="o">=~</span> <span class="sr">/^[a-z]+$/</span>
@@ -253,10 +202,8 @@
           <span class="n">remove_instance_variable</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="k">if</span> <span class="n">instance_variable_defined?</span> <span class="n">var</span>
           <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">del</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">:</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">end</span>
-      <span class="k">end</span>
+      <span class="k">end</span><span class="p">;</span> <span class="kp">private</span> <span class="s2">&quot;_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span>
       
-      <span class="kp">private</span> <span class="s2">&quot;_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span>
-
       <span class="k">if</span> <span class="n">options</span><span class="o">[</span><span class="ss">:reverse</span><span class="o">]</span>
         <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;_reverse_association_of_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">value</span><span class="o">|</span>
           <span class="k">if</span> <span class="n">value</span>
@@ -276,29 +223,24 @@
               <span class="k">end</span>
             <span class="k">end</span>
           <span class="k">end</span>
-        <span class="k">end</span>
-        
-        <span class="kp">private</span> <span class="s2">&quot;_reverse_association_of_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span>
+        <span class="k">end</span><span class="p">;</span> <span class="kp">private</span> <span class="s2">&quot;_reverse_association_of_</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">=&quot;</span>
       <span class="k">end</span>
     <span class="k">end</span>
-    
-  <span class="kp">private</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-17">#</a>               </div>               <h3>Helper methods</h3>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="kp">private</span>
   
     <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">fetch</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
       <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">||</span> <span class="k">raise</span><span class="p">(</span><span class="no">EntityNotFound</span><span class="p">,</span> <span class="s2">&quot;no </span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2"> with key </span><span class="si">#{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">end</span>
-  
-    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">next_key</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-18">#</a>               </div>               <p>Each entity has its own counter to generate a sequence of keys.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">next_key</span>
       <span class="n">counter</span> <span class="o">=</span> <span class="no">Remodel</span><span class="o">.</span><span class="n">redis</span><span class="o">.</span><span class="n">incr</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">key_prefix</span><span class="si">}</span><span class="s2">:seq&quot;</span><span class="p">)</span>
       <span class="s2">&quot;</span><span class="si">#{</span><span class="n">key_prefix</span><span class="si">}</span><span class="s2">:</span><span class="si">#{</span><span class="n">counter</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="k">end</span>
-  
-    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">key_prefix</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-19">#</a>               </div>               <p>Default key prefix is the first letter of the class name, in lowercase.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">key_prefix</span>
       <span class="vi">@key_prefix</span> <span class="o">||=</span> <span class="nb">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;::&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="o">].</span><span class="n">downcase</span>
     <span class="k">end</span>
     
     <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">parse</span><span class="p">(</span><span class="n">json</span><span class="p">)</span>
-      <span class="n">unpack</span><span class="p">(</span><span class="no">Yajl</span><span class="o">::</span><span class="no">Parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">json</span><span class="p">))</span>
+      <span class="n">unpack</span><span class="p">(</span><span class="no">JSON</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">json</span><span class="p">))</span>
     <span class="k">end</span>
   
     <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">pack</span><span class="p">(</span><span class="n">attributes</span><span class="p">)</span>
@@ -317,15 +259,11 @@
       <span class="k">end</span>
       <span class="n">result</span>
     <span class="k">end</span>
-    
-    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">mapper</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="octowrap">                 <a class="octothorpe" href="#section-20">#</a>               </div>               <p>Lazy init</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">mapper</span>
       <span class="vi">@mapper</span> <span class="o">||=</span> <span class="p">{}</span>
     <span class="k">end</span>
   <span class="k">end</span>
     
-<span class="k">end</span></pre></div>
-      </td>
-    </tr>
-    </table>
-</div>
-</body>
+<span class="k">end</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

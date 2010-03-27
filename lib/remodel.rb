@@ -1,35 +1,58 @@
 require 'rubygems'
 require 'redis'
-require 'yajl'
 
+# Use the superfast [YAJL][yajl] lib to parse [JSON][json], if available.
+#
+# [yajl]: http://github.com/brianmario/yajl-ruby
+# [json]: http://json.org/
+begin
+  require 'yajl/json_gem'
+rescue LoadError
+  require 'json'
+end
 
-# Let's start with some monkeypatching ...
+#### Monkey patches
+
+# Define `Boolean` as the superclass of `true` and `false`.
 module Boolean; end
-true.extend Boolean
-false.extend Boolean
+true.extend(Boolean) 
+false.extend(Boolean)
 
-# converts String, Symbol or Class into Class
+# Find the `Class` object for a given class name, which can be a `String` or `Symbol` (or `Class`).
 def Class.[](clazz)
-  return nil unless clazz
+  return clazz if clazz.nil? or clazz.is_a?(Class)
   clazz.to_s.split('::').inject(Kernel) { |mod, name| mod.const_get(name) }
 end
 
+#### Remodel
+
 module Remodel
   
+  # By default, we expect to find the redis server on `localhost:6379` &mdash;
+  # otherwise you will have to set `Remodel.redis` to a suitably initialized redis client.
+  def self.redis
+    @redis ||= Redis.new
+  end
+
+  def self.redis=(redis)
+    @redis = redis
+  end
+
+  # Custom errors
   class Error < ::StandardError; end
   class EntityNotFound < Error; end
   class EntityNotSaved < Error; end
   class InvalidKeyPrefix < Error; end
   class InvalidType < Error; end
   
-  def self.redis=(redis)
-    @redis = redis
-  end
+  #### Mapper
 
-  def self.redis
-    @redis ||= Redis.new
-  end
-
+  # A mapper converts a given value into a native JSON value &mdash;
+  # *nil*, *true*, *false*, *Number*, *String*, *Hash*, *Array* &mdash; via `pack`,
+  # and back again via `unpack`.
+  #
+  # Without any arguments, `Mapper.new` returns the identity mapper, which maps every value into itself.
+  # If `clazz` is set, the mapper rejects any value which is not of the given type.
   class Mapper
     def initialize(clazz = nil, pack_method = nil, unpack_method = nil)
       @clazz = clazz
@@ -49,6 +72,8 @@ module Remodel
     end
   end
 
+  # So let's define some handy mappers for common types, and a way to look them up.
+  # If no mapper is defined for a given class, the identity mapper is used.
   def self.mapper_by_class
     @mapper_by_class ||= Hash.new(Mapper.new).merge(
       Boolean => Mapper.new(Boolean),
@@ -66,9 +91,12 @@ module Remodel
     mapper_by_class[Class[clazz]]
   end
 
+  #### HasMany
+
+  # Represents the many-end of a many-to-one or many-to-many association.
   class HasMany < Array
     def initialize(this, clazz, key, reverse = nil)
-      super fetch(clazz, key)
+      super _fetch(clazz, key)
       @this, @clazz, @key, @reverse = this, clazz, key, reverse
     end
 
@@ -77,7 +105,7 @@ module Remodel
     end
 
     def add(entity)
-      add_to_reverse_association_of(entity) if @reverse
+      _add_to_reverse_association_of(entity) if @reverse
       _add(entity)
     end
 
@@ -94,7 +122,7 @@ module Remodel
       Remodel.redis.lrem(@key, 0, entity.key)
     end
 
-    def add_to_reverse_association_of(entity)
+    def _add_to_reverse_association_of(entity)
       if entity.send(@reverse).is_a? HasMany
         entity.send(@reverse).send(:_add, @this)
       else
@@ -102,7 +130,7 @@ module Remodel
       end
     end
 
-    def fetch(clazz, key)
+    def _fetch(clazz, key)
       keys = Remodel.redis.lrange(key, 0, -1)
       values = keys.empty? ? [] : Remodel.redis.mget(keys)
       keys.zip(values).map do |key, json|
@@ -110,7 +138,10 @@ module Remodel
       end.compact
     end
   end
+  
+#### Entity
 
+  # The superclass of all persistent remodel entities.
   class Entity
     attr_accessor :key
     
@@ -138,7 +169,7 @@ module Remodel
     end
 
     def to_json
-      Yajl::Encoder.encode(self.class.pack(@attributes))
+      JSON.generate(self.class.pack(@attributes))
     end
     
     def inspect
@@ -158,6 +189,8 @@ module Remodel
       new(parse(json), key)
     end
     
+#### DSL for subclasses
+
   protected
 
     def self.set_key_prefix(prefix)
@@ -211,10 +244,8 @@ module Remodel
           remove_instance_variable(var) if instance_variable_defined? var
           Remodel.redis.del("#{key}:#{name}")
         end
-      end
+      end; private "_#{name}="
       
-      private "_#{name}="
-
       if options[:reverse]
         define_method("_reverse_association_of_#{name}=") do |value|
           if value
@@ -234,29 +265,31 @@ module Remodel
               end
             end
           end
-        end
-        
-        private "_reverse_association_of_#{name}="
+        end; private "_reverse_association_of_#{name}="
       end
     end
     
+#### Helper methods
+
   private
   
     def self.fetch(key)
       Remodel.redis.get(key) || raise(EntityNotFound, "no #{name} with key #{key}")
     end
   
+    # Each entity has its own counter to generate a sequence of keys.
     def self.next_key
       counter = Remodel.redis.incr("#{key_prefix}:seq")
       "#{key_prefix}:#{counter}"
     end
   
+    # Default key prefix is the first letter of the class name, in lowercase.
     def self.key_prefix
       @key_prefix ||= name.split('::').last[0,1].downcase
     end
     
     def self.parse(json)
-      unpack(Yajl::Parser.parse(json))
+      unpack(JSON.parse(json))
     end
   
     def self.pack(attributes)
@@ -276,6 +309,7 @@ module Remodel
       result
     end
     
+    # Lazy init
     def self.mapper
       @mapper ||= {}
     end
