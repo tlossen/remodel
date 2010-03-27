@@ -2,12 +2,14 @@ require 'rubygems'
 require 'redis'
 require 'yajl'
 
+
+# Let's start with some monkeypatching ...
 module Boolean; end
 true.extend Boolean
 false.extend Boolean
 
 # converts String, Symbol or Class into Class
-def Kernel.find_class(clazz)
+def Class.[](clazz)
   return nil unless clazz
   clazz.to_s.split('::').inject(Kernel) { |mod, name| mod.const_get(name) }
 end
@@ -46,7 +48,7 @@ module Remodel
       @unpack_method ? @clazz.send(@unpack_method, value) : value
     end
   end
-  
+
   def self.mapper_by_class
     @mapper_by_class ||= Hash.new(Mapper.new).merge(
       Boolean => Mapper.new(Boolean),
@@ -59,11 +61,56 @@ module Remodel
       Time => Mapper.new(Time, :to_i, :at)
     )
   end
-  
+
   def self.mapper_for(clazz)
-    mapper_by_class[Kernel.find_class(clazz)]
+    mapper_by_class[Class[clazz]]
   end
-    
+
+  class HasMany < Array
+    def initialize(this, clazz, key, reverse = nil)
+      super fetch(clazz, key)
+      @this, @clazz, @key, @reverse = this, clazz, key, reverse
+    end
+
+    def create(attributes = {})
+      add(@clazz.create(attributes))
+    end
+
+    def add(entity)
+      add_to_reverse_association_of(entity) if @reverse
+      _add(entity)
+    end
+
+  private
+
+    def _add(entity)
+      self << entity
+      Remodel.redis.rpush(@key, entity.key)
+      entity
+    end
+
+    def _remove(entity)
+      delete_if { |x| x.key = entity.key }
+      Remodel.redis.lrem(@key, 0, entity.key)
+    end
+
+    def add_to_reverse_association_of(entity)
+      if entity.send(@reverse).is_a? HasMany
+        entity.send(@reverse).send(:_add, @this)
+      else
+        entity.send("_#{@reverse}=", @this)
+      end
+    end
+
+    def fetch(clazz, key)
+      keys = Remodel.redis.lrange(key, 0, -1)
+      values = keys.empty? ? [] : Remodel.redis.mget(keys)
+      keys.zip(values).map do |key, json|
+        clazz.restore(key, json) if json
+      end.compact
+    end
+  end
+
   class Entity
     attr_accessor :key
     
@@ -125,51 +172,6 @@ module Remodel
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
     
-    class HasMany < Array
-      def initialize(this, clazz, key, reverse = nil)
-        super fetch(clazz, key)
-        @this, @clazz, @key, @reverse = this, clazz, key, reverse
-      end
-
-      def create(attributes = {})
-        add(@clazz.create(attributes))
-      end
-
-      def add(entity)
-        add_to_reverse_association_of(entity) if @reverse
-        _add(entity)
-      end
-
-    private
-
-      def _add(entity)
-        self << entity
-        Remodel.redis.rpush(@key, entity.key)
-        entity
-      end
-
-      def _remove(entity)
-        delete_if { |x| x.key = entity.key }
-        Remodel.redis.lrem(@key, 0, entity.key)
-      end
-
-      def add_to_reverse_association_of(entity)
-        if entity.send(@reverse).is_a? HasMany
-          entity.send(@reverse).send(:_add, @this)
-        else
-          entity.send("_#{@reverse}=", @this)
-        end
-      end
-
-      def fetch(clazz, key)
-        keys = Remodel.redis.lrange(key, 0, -1)
-        values = keys.empty? ? [] : Remodel.redis.mget(keys)
-        keys.zip(values).map do |key, json|
-          clazz.restore(key, json) if json
-        end.compact
-      end
-    end
-    
     def self.has_many(name, options)
       var = "@association_#{name}".to_sym
       
@@ -177,7 +179,7 @@ module Remodel
         if instance_variable_defined? var
           instance_variable_get(var)
         else
-          clazz = Kernel.find_class(options[:class])
+          clazz = Class[options[:class]]
           instance_variable_set(var, HasMany.new(self, clazz, "#{key}:#{name}", options[:reverse]))
         end
       end
@@ -190,7 +192,7 @@ module Remodel
         if instance_variable_defined? var
           instance_variable_get(var)
         else
-          clazz = Kernel.find_class(options[:class])
+          clazz = Class[options[:class]]
           value_key = Remodel.redis.get("#{key}:#{name}")
           instance_variable_set(var, clazz.find(value_key)) if value_key
         end
