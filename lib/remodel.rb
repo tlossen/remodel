@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'redis'
+require 'date'
 
 # Use the superfast [YAJL][yajl] lib to parse [JSON][json], if available.
 #
