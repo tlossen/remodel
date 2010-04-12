@@ -160,6 +160,11 @@ module Remodel
       self
     end
     
+    def update(properties)
+      properties.each { |name, value| send("#{name}=", value) }
+      save
+    end
+    
     def reload
       raise EntityNotSaved unless @key
       initialize(self.class.parse(self.class.fetch(@key)), @key)

@@ -115,19 +115,39 @@ class TestEntity < Test::Unit::TestCase
     end
   end
   
-   context "#set_key_prefix" do
-     should "use the given key prefix" do
-       class Custom < Remodel::Entity; set_key_prefix 'my'; end
-       assert_match /^my:\d+$/, Custom.create.key
-     end
-     
-     should "ensure that the prefix is letters only" do
-       assert_raise(Remodel::InvalidKeyPrefix) do
-         class InvalidPrefix < Remodel::Entity; set_key_prefix '666'; end
-       end
-     end
-   end
+  context "update" do
+    setup do
+      redis.flushdb
+      @foo = Foo.create :x => 'Tim', :y => true
+    end
+    
+    should "set the given properties" do
+      @foo.update(:x => 12, :y => 'Jan')
+      assert_equal 12, @foo.x
+      assert_equal 'Jan', @foo.y
+    end
+    
+    should "save the entity" do
+      @foo.update(:x => 12, :y => 'Jan')
+      @foo.reload
+      assert_equal 12, @foo.x
+      assert_equal 'Jan', @foo.y
+    end
+  end
   
+  context "#set_key_prefix" do
+    should "use the given key prefix" do
+      class Custom < Remodel::Entity; set_key_prefix 'my'; end
+      assert_match /^my:\d+$/, Custom.create.key
+    end
+ 
+    should "ensure that the prefix is letters only" do
+      assert_raise(Remodel::InvalidKeyPrefix) do
+        class InvalidPrefix < Remodel::Entity; set_key_prefix '666'; end
+      end
+    end
+  end
+    
   context "find" do
     setup do
       redis.flushdb
