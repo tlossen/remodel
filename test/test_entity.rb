@@ -168,16 +168,27 @@ class TestEntity < Test::Unit::TestCase
     setup do
       redis.flushdb
       @foo = Foo.create :x => 'hello', :y => 123
+      @bar = Foo.create :x => 'hallo', :y => 124
     end
     
-    should "load an entity from redis" do
+    should "find and load an entity by key" do
       foo = Foo.find(@foo.key)
       assert_equal foo.x, @foo.x
       assert_equal foo.y, @foo.y
     end
     
-    should "raise EntityNotFound if the key does not exist" do
-      assert_raise(Remodel::EntityNotFound) { Foo.find(23) }
+    should "find and load an entity by id" do
+      foo = Foo.find(@foo.id)
+      assert_equal foo.x, @foo.x
+      assert_equal foo.y, @foo.y
+    end
+    
+    should "reject a key which does not exist" do
+      assert_raise(Remodel::EntityNotFound) { Foo.find('x:66') }
+    end
+
+    should "reject an id which does not exist" do
+      assert_raise(Remodel::EntityNotFound) { Foo.find(66) }
     end
   end
   

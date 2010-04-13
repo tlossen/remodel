@@ -192,6 +192,7 @@ module Remodel
     end
   
     def self.find(key)
+      key = "#{key_prefix}:#{key}" if key.kind_of? Integer
       restore(key, fetch(key))
     end
 
@@ -287,10 +288,10 @@ module Remodel
       Remodel.redis.get(key) || raise(EntityNotFound, "no #{name} with key #{key}")
     end
   
-    # Each entity has its own counter to generate a sequence of keys.
+    # Each entity has its own sequence to generate unique ids.
     def self.next_key
-      counter = Remodel.redis.incr("#{key_prefix}:seq")
-      "#{key_prefix}:#{counter}"
+      id = Remodel.redis.incr("#{key_prefix}:seq")
+      "#{key_prefix}:#{id}"
     end
   
     # Default key prefix is the first letter of the class name, in lowercase.
