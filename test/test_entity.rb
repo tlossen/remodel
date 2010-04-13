@@ -20,39 +20,15 @@ class TestEntity < Test::Unit::TestCase
       foo = Foo.new :z => 3
       assert foo.instance_eval { !@attributes.key? :z }
     end
-  end
-  
-  context "reload" do
-    setup do
-      @foo = Foo.create :x => 'hello', :y => true
-    end
-
-    should "reload all properties" do
-      redis.set @foo.key, %q({"x":23,"y":"adios"})
-      @foo.reload
-      assert_equal 23, @foo.x
-      assert_equal 'adios', @foo.y
+    
+    should "not set the key" do
+      foo = Foo.new :x => 23
+      assert_equal nil, foo.key
     end
     
-    should "keep the key" do
-      key = @foo.key
-      @foo.reload
-      assert_equal key, @foo.key
-    end
-    
-    should "stay the same object" do
-      id = @foo.object_id
-      @foo.reload
-      assert_equal id, @foo.object_id
-    end
-    
-    should "raise EntityNotFound if the entity does not exist any more" do
-      redis.del @foo.key
-      assert_raise(Remodel::EntityNotFound) { @foo.reload }
-    end
-    
-    should "raise EntityNotSaved if the entity was never saved" do
-      assert_raise(Remodel::EntityNotSaved) { Foo.new.reload }
+    should "not set the id" do
+      foo = Foo.new :x => 23
+      assert_equal nil, foo.id      
     end
   end
   
@@ -70,6 +46,12 @@ class TestEntity < Test::Unit::TestCase
       assert_equal 'f:1', Foo.create.key
       assert_equal 'b:1', Bar.create.key
       assert_equal 'b:2', Bar.create.key
+    end
+    
+    should "give the entity an id which is unique per entity class" do
+      assert_equal 1, Foo.create.id
+      assert_equal 1, Bar.create.id
+      assert_equal 2, Bar.create.id
     end
     
     should "store the entity under its key" do
@@ -112,6 +94,40 @@ class TestEntity < Test::Unit::TestCase
       foo.reload
       assert_equal 'hello', foo.x
       assert_equal false, foo.y
+    end
+  end
+  
+  context "reload" do
+    setup do
+      @foo = Foo.create :x => 'hello', :y => true
+    end
+
+    should "reload all properties" do
+      redis.set @foo.key, %q({"x":23,"y":"adios"})
+      @foo.reload
+      assert_equal 23, @foo.x
+      assert_equal 'adios', @foo.y
+    end
+    
+    should "keep the key" do
+      key = @foo.key
+      @foo.reload
+      assert_equal key, @foo.key
+    end
+    
+    should "stay the same object" do
+      id = @foo.object_id
+      @foo.reload
+      assert_equal id, @foo.object_id
+    end
+    
+    should "raise EntityNotFound if the entity does not exist any more" do
+      redis.del @foo.key
+      assert_raise(Remodel::EntityNotFound) { @foo.reload }
+    end
+    
+    should "raise EntityNotSaved if the entity was never saved" do
+      assert_raise(Remodel::EntityNotSaved) { Foo.new.reload }
     end
   end
   

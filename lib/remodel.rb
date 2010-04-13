@@ -154,6 +154,10 @@ module Remodel
       end
     end
     
+    def id
+      key && key.split(':').last.to_i
+    end
+    
     def save
       @key = self.class.next_key unless @key
       Remodel.redis.set(@key, to_json)
