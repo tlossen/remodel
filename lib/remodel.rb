@@ -149,6 +149,7 @@ module Remodel
     def initialize(attributes = {}, key = nil)
       @attributes = {}
       @key = key
+      attributes = self.class.default_values.merge(attributes) if key.nil?
       attributes.each do |name, value|
         send("#{name}=", value) if respond_to? "#{name}="
       end
@@ -225,6 +226,7 @@ module Remodel
     def self.property(name, options = {})
       name = name.to_sym
       mapper[name] = Remodel.mapper_for(options[:class])
+      default_values[name] = options[:default]
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
@@ -337,6 +339,11 @@ module Remodel
     def self.mapper
       @mapper ||= {}
     end
+    
+    def self.default_values
+      @default_values ||= {}
+    end
+    
   end
     
 end

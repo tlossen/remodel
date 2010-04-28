@@ -5,7 +5,9 @@ class Foo < Remodel::Entity
   property :y
 end
 
-class Bar < Remodel::Entity; end
+class Bar < Remodel::Entity
+  property :d, :default => 123
+end
 
 class TestEntity < Test::Unit::TestCase
 
@@ -30,6 +32,16 @@ class TestEntity < Test::Unit::TestCase
       foo = Foo.new :x => 23
       assert_equal nil, foo.id      
     end
+    
+    should "use default values for missing properties" do
+      bar = Bar.new
+      assert_equal 123, bar.d
+    end
+    
+    should "not use default values for given properties" do
+      bar = Bar.new :d => 'cool'
+      assert_equal 'cool', bar.d
+    end    
   end
   
   context "create" do
@@ -69,7 +81,17 @@ class TestEntity < Test::Unit::TestCase
     should "not store the key as a property" do
       foo = Foo.create :x => 'hello', :y => false
       assert !(/f:1/ =~ redis.get(foo.key))
-    end    
+    end
+
+    should "use default values for missing properties" do
+      bar = Bar.create
+      assert_equal 123, bar.d
+    end
+    
+    should "not use default values for given properties" do
+      bar = Bar.create :d => 'cool'
+      assert_equal 'cool', bar.d
+    end
   end
   
   context "save" do
@@ -184,7 +206,7 @@ class TestEntity < Test::Unit::TestCase
     setup do
       redis.flushdb
       @foo = Foo.create :x => 'hello', :y => 123
-      @bar = Foo.create :x => 'hallo', :y => 124
+      Foo.create :x => 'hallo', :y => 124
     end
     
     should "find and load an entity by key" do
