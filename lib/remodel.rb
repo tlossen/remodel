@@ -177,6 +177,11 @@ module Remodel
       end
       self
     end
+    
+    def delete
+      raise EntityNotSaved unless @key
+      Remodel.redis.del(@key)
+    end
 
     def to_json
       JSON.generate(self.class.pack(@attributes))
@@ -184,7 +189,7 @@ module Remodel
     
     def inspect
       properties = @attributes.map { |name, value| "#{name}: #{value.inspect}" }.join(', ')
-      "\#<#{self.class.name}(#{key}) #{properties}>"
+      "\#<#{self.class.name}(#{id}) #{properties}>"
     end
 
     def self.create(attributes = {})
@@ -194,6 +199,14 @@ module Remodel
     def self.find(key)
       key = "#{key_prefix}:#{key}" if key.kind_of? Integer
       restore(key, fetch(key))
+    end
+    
+    def self.all
+      keys = Remodel.redis.keys("#{key_prefix}:*").select { |k| k =~ /:[0-9]+$/ }
+      values = keys.empty? ? [] : Remodel.redis.mget(keys)
+      keys.zip(values).map do |key, json|
+        restore(key, json) if json
+      end.compact
     end
 
     def self.restore(key, json)

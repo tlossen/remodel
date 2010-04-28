@@ -151,6 +151,22 @@ class TestEntity < Test::Unit::TestCase
     end
   end
   
+  context "delete" do
+    setup do
+      redis.flushdb
+      @foo = Foo.create :x => 'Tim', :y => true
+    end
+    
+    should "delete the given entity" do
+      @foo.delete
+      assert_nil redis.get(@foo.key)
+    end
+
+    should "ensure that the entity is persistent" do
+      assert_raise(Remodel::EntityNotSaved) { Foo.new.delete }
+    end
+  end
+  
   context "#set_key_prefix" do
     should "use the given key prefix" do
       class Custom < Remodel::Entity; set_key_prefix 'my'; end
@@ -189,6 +205,19 @@ class TestEntity < Test::Unit::TestCase
 
     should "reject an id which does not exist" do
       assert_raise(Remodel::EntityNotFound) { Foo.find(66) }
+    end
+  end
+  
+  context "all" do
+    setup do
+      redis.flushdb
+      17.times { |i| Foo.create :x => 'hello', :y => i }
+      5.times { |i| Bar.create }
+    end
+    
+    should "find all entities of the given class" do
+      assert_equal 17, Foo.all.size
+      assert_equal 5, Bar.all.size
     end
   end
   
