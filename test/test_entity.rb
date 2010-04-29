@@ -30,7 +30,7 @@ class TestEntity < Test::Unit::TestCase
     
     should "not set the id" do
       foo = Foo.new :x => 23
-      assert_equal nil, foo.id      
+      assert_equal nil, foo.id
     end
     
     should "use default values for missing properties" do
@@ -41,7 +41,7 @@ class TestEntity < Test::Unit::TestCase
     should "not use default values for given properties" do
       bar = Bar.new :d => 'cool'
       assert_equal 'cool', bar.d
-    end    
+    end
   end
   
   context "create" do
@@ -189,6 +189,22 @@ class TestEntity < Test::Unit::TestCase
     end
   end
   
+  context "to_json" do
+    should "serialize to json" do
+      foo = Foo.new :x => 42, :y => true
+      assert_match /"x":42/, foo.to_json
+      assert_match /"y":true/, foo.to_json
+    end
+  end
+  
+  context "as_json" do
+    should "serialize into a hash" do
+      foo = Foo.create :x => 42, :y => true
+      expected = { :key => foo.key, :x => 42, :y => true }
+      assert_equal expected, foo.as_json
+    end
+  end
+  
   context "#set_key_prefix" do
     should "use the given key prefix" do
       class Custom < Remodel::Entity; set_key_prefix 'my'; end
@@ -202,7 +218,7 @@ class TestEntity < Test::Unit::TestCase
     end
   end
     
-  context "find" do
+  context "#find" do
     setup do
       redis.flushdb
       @foo = Foo.create :x => 'hello', :y => 123
@@ -230,7 +246,7 @@ class TestEntity < Test::Unit::TestCase
     end
   end
   
-  context "all" do
+  context "#all" do
     setup do
       redis.flushdb
       17.times { |i| Foo.create :x => 'hello', :y => i }
@@ -297,15 +313,7 @@ class TestEntity < Test::Unit::TestCase
     end
   end
   
-  context "json" do
-    should "serialize to json" do
-      foo = Foo.new :x => 42, :y => true
-      assert_match /"x":42/, foo.to_json
-      assert_match /"y":true/, foo.to_json
-    end
-  end
-  
-  context "restore" do
+  context "#restore" do
     should "restore an entity from json" do
       before = Foo.create :x => 42, :y => true
       after = Foo.restore(before.key, before.to_json)

@@ -184,6 +184,10 @@ module Remodel
       Remodel.redis.del(@key)
     end
 
+    def as_json
+      { :key => key }.merge(@attributes)
+    end
+
     def to_json
       JSON.generate(self.class.pack(@attributes))
     end
@@ -226,7 +230,7 @@ module Remodel
     def self.property(name, options = {})
       name = name.to_sym
       mapper[name] = Remodel.mapper_for(options[:class])
-      default_values[name] = options[:default]
+      default_values[name] = options[:default] if options[:default]
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
