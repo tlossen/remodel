@@ -29,24 +29,17 @@ persistence to disk. for example, on my macbook (2 ghz):
 		$ brew install redis
 		$ gem install redis
 
-2. install the super-fast [yajl](http://github.com/lloyd/yajl) json parser
-plus ruby bindings:
+2. start redis:
 
-		$ brew install yajl
-		$ gem install yajl-ruby
+		$ ./redis-server
 
-3. start redis:
-
-		$ redis-server
-
-4. now the tests should run successfully:
+3. now the tests should run successfully:
 
 		$ rake
 		Started
-		.................................................................
-		Finished in 0.063041 seconds.
-		65 tests, 103 assertions, 0 failures, 0 errors
-
+		.......................................................................................
+		Finished in 0.072304 seconds.
+		87 tests, 138 assertions, 0 failures, 0 errors
 
 ## example
 
@@ -79,23 +72,23 @@ now you can do:
 
 * [how to redis](http://www.paperplanes.de/2009/10/30/how_to_redis.html)
 &mdash; good overview of different mapping options by [mattmatt](http://github.com/mattmatt).
-* [hurl](http://github.com/defunkt/hurl) &mdash; basically i started with
-defunkts [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb).
+* [hurl](http://github.com/defunkt/hurl) &mdash; basically
+defunkts [Hurl::Model](http://github.com/defunkt/hurl/blob/master/models/model.rb) is what i started with.
 * [ohm](http://github.com/soveran/ohm) &mdash; object-hash mapping for redis. 
 somewhat similar, but instead of serializing to json, stores each attribute under a separate key.
 
 
 ## todo
 
-* documentation ([rocco](http://github.com/rtomayko/rocco))
-* benchmarks
-* `delete`
+* better docs
 * `find_by`
+* make serializer (json, messagepack, marshal ...) configurable
+* benchmarks
 
 
 ## status
 
-alpha. play around at your own risk :)
+still pretty alpha &mdash; play around at your own risk :)
 
 
 ## license
