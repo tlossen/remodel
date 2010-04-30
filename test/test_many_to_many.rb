@@ -41,12 +41,36 @@ class TestManyToMany < Test::Unit::TestCase
       should "add a new group to both associations" do
         @tim.groups.add(@rugb)
         assert_equal [@tim], @rugb.members
+        assert_equal [@rugb], @tim.groups
       end
       
       should "add a new person to both associations" do
         @rugb.members.add(@tim)
+        assert_equal [@tim], @rugb.members
         assert_equal [@rugb], @tim.groups
       end
+    end
+    
+    context "remove" do
+      setup do
+        @tim = Person.create :name => 'tim'
+        @rugb = @tim.groups.create(:name => 'rug-b')
+        @erlang = @tim.groups.create(:name => 'erlang')
+        @aws = @tim.groups.create(:name => 'aws')
+      end
+      
+      should "remove a group from both associations" do
+        @tim.groups.remove(@erlang)
+        assert_equal [@rugb, @aws], @tim.groups
+        assert_equal [], @erlang.members
+      end
+      
+      should "remove a person from both associations" do
+        @erlang.members.remove(@tim)
+        assert_equal [@rugb, @aws], @tim.groups
+        assert_equal [], @erlang.members
+      end
+      
     end
   end
   

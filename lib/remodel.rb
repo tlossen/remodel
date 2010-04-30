@@ -109,6 +109,11 @@ module Remodel
       _add_to_reverse_association_of(entity) if @reverse
       _add(entity)
     end
+    
+    def remove(entity)
+      _remove_from_reverse_association_of(entity) if @reverse
+      _remove(entity)
+    end
 
   private
 
@@ -119,8 +124,9 @@ module Remodel
     end
 
     def _remove(entity)
-      delete_if { |x| x.key = entity.key }
+      delete_if { |x| x.key == entity.key }
       Remodel.redis.lrem(@key, 0, entity.key)
+      entity
     end
 
     def _add_to_reverse_association_of(entity)
@@ -128,6 +134,14 @@ module Remodel
         entity.send(@reverse).send(:_add, @this)
       else
         entity.send("_#{@reverse}=", @this)
+      end
+    end
+    
+    def _remove_from_reverse_association_of(entity)
+      if entity.send(@reverse).is_a? HasMany
+        entity.send(@reverse).send(:_remove, @this)
+      else
+        entity.send("_#{@reverse}=", nil)
       end
     end
 
@@ -185,7 +199,7 @@ module Remodel
     end
 
     def as_json
-      { :key => key }.merge(@attributes)
+      { :id => id }.merge(@attributes)
     end
 
     def to_json
@@ -230,7 +244,7 @@ module Remodel
     def self.property(name, options = {})
       name = name.to_sym
       mapper[name] = Remodel.mapper_for(options[:class])
-      default_values[name] = options[:default] if options[:default]
+      default_values[name] = options[:default] if options.has_key?(:default)
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end

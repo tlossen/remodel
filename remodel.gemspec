@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Tim Lossen"]
-  s.date = %q{2010-04-28}
+  s.date = %q{2010-04-30}
   s.default_executable = %q{redis-monitor.rb}
   s.description = %q{build your domain model in ruby, persist your objects to redis.}
   s.email = %q{tim@lossen.de}

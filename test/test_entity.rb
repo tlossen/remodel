@@ -200,7 +200,7 @@ class TestEntity < Test::Unit::TestCase
   context "as_json" do
     should "serialize into a hash" do
       foo = Foo.create :x => 42, :y => true
-      expected = { :key => foo.key, :x => 42, :y => true }
+      expected = { :id => foo.id, :x => 42, :y => true }
       assert_equal expected, foo.as_json
     end
   end
