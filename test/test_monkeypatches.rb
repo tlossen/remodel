@@ -13,7 +13,7 @@ class TestMonkeypatches < Test::Unit::TestCase
     should "return given Class objects" do
       assert_equal String, Class[String]
     end
-    
+
     should "return the Class object for a given String" do
       assert_equal String, Class['String']
     end
@@ -21,7 +21,7 @@ class TestMonkeypatches < Test::Unit::TestCase
     should "return the Class object for a given Symbol" do
       assert_equal String, Class[:String]
     end
-    
+
     should "work for nested classes" do
       assert_equal Remodel::Entity, Class['Remodel::Entity']
     end

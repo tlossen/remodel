@@ -16,7 +16,7 @@ end
 
 # Define `Boolean` as the superclass of `true` and `false`.
 module Boolean; end
-true.extend(Boolean) 
+true.extend(Boolean)
 false.extend(Boolean)
 
 # Find the `Class` object for a given class name, which can be a `String` or `Symbol` (or `Class`).
@@ -28,7 +28,7 @@ end
 #### Remodel
 
 module Remodel
-  
+
   # By default, we expect to find the redis server on `localhost:6379` &mdash;
   # otherwise you will have to set `Remodel.redis` to a suitably initialized redis client.
   def self.redis
@@ -45,7 +45,7 @@ module Remodel
   class EntityNotSaved < Error; end
   class InvalidKeyPrefix < Error; end
   class InvalidType < Error; end
-  
+
   #### Mapper
 
   # A mapper converts a given value into a native JSON value &mdash;
@@ -60,13 +60,13 @@ module Remodel
       @pack_method = pack_method
       @unpack_method = unpack_method
     end
-    
+
     def pack(value)
       return nil if value.nil?
       raise(InvalidType, "#{value.inspect} is not a #{@clazz}") if @clazz && !value.is_a?(@clazz)
       @pack_method ? value.send(@pack_method) : value
     end
-    
+
     def unpack(value)
       return nil if value.nil?
       @unpack_method ? @clazz.send(@unpack_method, value) : value
@@ -109,7 +109,7 @@ module Remodel
       _add_to_reverse_association_of(entity) if @reverse
       _add(entity)
     end
-    
+
     def remove(entity)
       _remove_from_reverse_association_of(entity) if @reverse
       _remove(entity)
@@ -136,7 +136,7 @@ module Remodel
         entity.send("_#{@reverse}=", @this)
       end
     end
-    
+
     def _remove_from_reverse_association_of(entity)
       if entity.send(@reverse).is_a? HasMany
         entity.send(@reverse).send(:_remove, @this)
@@ -153,13 +153,13 @@ module Remodel
       end.compact
     end
   end
-  
+
 #### Entity
 
   # The superclass of all persistent remodel entities.
   class Entity
     attr_accessor :key
-    
+
     def initialize(attributes = {}, key = nil)
       @attributes = {}
       @key = key
@@ -168,22 +168,22 @@ module Remodel
         send("#{name}=", value) if respond_to? "#{name}="
       end
     end
-    
+
     def id
       key && key.split(':').last.to_i
     end
-    
+
     def save
       @key = self.class.next_key unless @key
       Remodel.redis.set(@key, to_json)
       self
     end
-    
+
     def update(properties)
       properties.each { |name, value| send("#{name}=", value) }
       save
     end
-    
+
     def reload
       raise EntityNotSaved unless @key
       initialize(self.class.parse(self.class.fetch(@key)), @key)
@@ -192,7 +192,7 @@ module Remodel
       end
       self
     end
-    
+
     def delete
       raise EntityNotSaved unless @key
       Remodel.redis.del(@key)
@@ -205,7 +205,7 @@ module Remodel
     def to_json
       JSON.generate(self.class.pack(@attributes))
     end
-    
+
     def inspect
       properties = @attributes.map { |name, value| "#{name}: #{value.inspect}" }.join(', ')
       "\#<#{self.class.name}(#{id}) #{properties}>"
@@ -214,12 +214,12 @@ module Remodel
     def self.create(attributes = {})
       new(attributes).save
     end
-  
+
     def self.find(key)
       key = "#{key_prefix}:#{key}" if key.kind_of? Integer
       restore(key, fetch(key))
     end
-    
+
     def self.all
       keys = Remodel.redis.keys("#{key_prefix}:*").select { |k| k =~ /:[0-9]+$/ }
       values = keys.empty? ? [] : Remodel.redis.mget(keys)
@@ -231,7 +231,7 @@ module Remodel
     def self.restore(key, json)
       new(parse(json), key)
     end
-    
+
 #### DSL for subclasses
 
   protected
@@ -248,10 +248,10 @@ module Remodel
       define_method(name) { @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
-    
+
     def self.has_many(name, options)
       var = "@association_#{name}".to_sym
-      
+
       define_method(name) do
         if instance_variable_defined? var
           instance_variable_get(var)
@@ -261,10 +261,10 @@ module Remodel
         end
       end
     end
-    
+
     def self.has_one(name, options)
       var = "@association_#{name}".to_sym
-      
+
       define_method(name) do
         if instance_variable_defined? var
           instance_variable_get(var)
@@ -274,12 +274,12 @@ module Remodel
           instance_variable_set(var, clazz.find(value_key)) if value_key
         end
       end
-      
+
       define_method("#{name}=") do |value|
         send("_reverse_association_of_#{name}=", value) if options[:reverse]
         send("_#{name}=", value)
       end
-      
+
       define_method("_#{name}=") do |value|
         if value
           instance_variable_set(var, value)
@@ -289,7 +289,7 @@ module Remodel
           Remodel.redis.del("#{key}:#{name}")
         end
       end; private "_#{name}="
-      
+
       if options[:reverse]
         define_method("_reverse_association_of_#{name}=") do |value|
           if value
@@ -312,30 +312,30 @@ module Remodel
         end; private "_reverse_association_of_#{name}="
       end
     end
-    
+
 #### Helper methods
 
   private
-  
+
     def self.fetch(key)
       Remodel.redis.get(key) || raise(EntityNotFound, "no #{name} with key #{key}")
     end
-  
+
     # Each entity has its own sequence to generate unique ids.
     def self.next_key
       id = Remodel.redis.incr("#{key_prefix}:seq")
       "#{key_prefix}:#{id}"
     end
-  
+
     # Default key prefix is the first letter of the class name, in lowercase.
     def self.key_prefix
       @key_prefix ||= name.split('::').last[0,1].downcase
     end
-    
+
     def self.parse(json)
       unpack(JSON.parse(json))
     end
-  
+
     def self.pack(attributes)
       result = {}
       attributes.each do |name, value|
@@ -343,7 +343,7 @@ module Remodel
       end
       result
     end
-    
+
     def self.unpack(attributes)
       result = {}
       attributes.each do |name, value|
@@ -352,16 +352,16 @@ module Remodel
       end
       result
     end
-    
+
     # Lazy init
     def self.mapper
       @mapper ||= {}
     end
-    
+
     def self.default_values
       @default_values ||= {}
     end
-    
+
   end
-    
+
 end

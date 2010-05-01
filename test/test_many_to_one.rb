@@ -17,11 +17,11 @@ class TestManyToOne < Test::Unit::TestCase
       should "exist" do
         assert Puzzle.create.respond_to?(:pieces)
       end
-    
+
       should "return an empty list by default" do
         assert_equal [], Puzzle.create.pieces
       end
-    
+
       should "return any existing children" do
         puzzle = Puzzle.create
         redis.rpush "#{puzzle.key}:pieces", Piece.create(:color => 'red').key
@@ -30,18 +30,18 @@ class TestManyToOne < Test::Unit::TestCase
         assert_equal Piece, puzzle.pieces[0].class
         assert_equal 'red', puzzle.pieces[0].color
       end
-    
+
       context "create" do
         should "have a create method" do
           assert Puzzle.create.pieces.respond_to?(:create)
         end
-        
+
         should "work without attributes" do
           puzzle = Puzzle.create
           piece = puzzle.pieces.create
           assert piece.is_a?(Piece)
         end
-      
+
         should "create and store a new child" do
           puzzle = Puzzle.create
           puzzle.pieces.create :color => 'green'
@@ -51,7 +51,7 @@ class TestManyToOne < Test::Unit::TestCase
           assert_equal Piece, puzzle.pieces[0].class
           assert_equal 'green', puzzle.pieces[0].color
         end
-        
+
         should "associate the created child with self" do
           puzzle = Puzzle.create :topic => 'provence'
           piece = puzzle.pieces.create :color => 'green'
@@ -71,10 +71,10 @@ class TestManyToOne < Test::Unit::TestCase
           assert_equal 'white', puzzle.pieces[0].color
         end
       end
-      
+
     end
   end
-  
+
   context "reload" do
     should "reset has_many associations" do
       puzzle = Puzzle.create
@@ -84,5 +84,5 @@ class TestManyToOne < Test::Unit::TestCase
       assert_equal [], puzzle.pieces
     end
   end
-  
+
 end

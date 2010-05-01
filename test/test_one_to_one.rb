@@ -17,35 +17,35 @@ class TestOneToOne < Test::Unit::TestCase
       assert_equal nil, Man.new.wife
       assert_equal nil, Woman.new.husband
     end
-    
+
     context "setter" do
       setup do
         @bill = Man.create :name => 'Bill'
         @mary = Woman.create :name => 'Mary'
       end
-      
+
       context "non-nil value" do
         should "also set husband" do
           @bill.wife = @mary
           assert_equal @bill, @mary.husband
         end
-      
+
         should "also set wife" do
           @mary.husband = @bill
           assert_equal @mary, @bill.wife
         end
       end
-      
+
       context "nil value" do
         setup do
           @bill.wife = @mary
         end
-        
+
         should "also clear husband" do
           @bill.wife = nil
           assert_equal nil, @mary.husband
         end
-        
+
         should "also clear wife" do
           @mary.husband = nil
           assert_equal nil, @bill.wife
@@ -53,5 +53,5 @@ class TestOneToOne < Test::Unit::TestCase
       end
     end
   end
-  
+
 end
