@@ -72,6 +72,22 @@ class TestManyToOne < Test::Unit::TestCase
         end
       end
 
+      context "find" do
+        setup do
+          @puzzle = Puzzle.create
+          5.times { @puzzle.pieces.create :color => 'blue' }
+        end
+
+        should "find the element with the given id" do
+          piece = @puzzle.pieces[2]
+          assert_equal piece, @puzzle.pieces.find(piece.id)
+        end
+
+        should "raise an exception if no element with the given id exists" do
+          assert_raises(Remodel::EntityNotFound) { @puzzle.pieces.find(-1) }
+        end
+      end
+
     end
   end
 

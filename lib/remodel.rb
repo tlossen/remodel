@@ -105,6 +105,10 @@ module Remodel
       add(@clazz.create(attributes))
     end
 
+    def find(id)
+      detect { |x| x.id == id } || raise(EntityNotFound, "no element with id #{id}")
+    end
+
     def add(entity)
       _add_to_reverse_association_of(entity) if @reverse
       _add(entity)
