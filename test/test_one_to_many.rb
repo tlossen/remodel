@@ -9,7 +9,7 @@ class TestOneToMany < Test::Unit::TestCase
   end
 
   class Puzzle < Remodel::Entity
-    has_many :pieces, :class => 'TestOneToMany::Piece'
+    has_many :pieces, :class => 'TestOneToMany::Piece', :reverse => 'puzzle'
     property :topic
   end
 
@@ -48,6 +48,15 @@ class TestOneToMany < Test::Unit::TestCase
         piece = Piece.create
         piece.puzzle = puzzle
         assert_equal 1, puzzle.pieces.size
+        assert_equal piece.id, puzzle.pieces.first.id
+      end
+      
+      should "remove the entity from the old reverse association" do
+        puzzle = Puzzle.create
+        piece = puzzle.pieces.create
+        new_puzzle = Puzzle.create
+        piece.puzzle = new_puzzle
+        assert_equal [], puzzle.reload.pieces
       end
 
       should "be settable to nil" do

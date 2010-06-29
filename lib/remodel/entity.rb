@@ -1,5 +1,5 @@
 module Remodel
-  
+
   # The superclass of all persistent remodel entities.
   class Entity
     attr_accessor :key
@@ -134,21 +134,20 @@ module Remodel
 
       if options[:reverse]
         define_method("_reverse_association_of_#{name}=") do |value|
+          if old_value = send(name)
+            association = old_value.send("#{options[:reverse]}")
+            if association.is_a? HasMany
+              association.send("_remove", self)
+            else
+              old_value.send("_#{options[:reverse]}=", nil)
+            end
+          end
           if value
             association = value.send("#{options[:reverse]}")
             if association.is_a? HasMany
               association.send("_add", self)
             else
               value.send("_#{options[:reverse]}=", self)
-            end
-          else
-            if old_value = send(name)
-              association = old_value.send("#{options[:reverse]}")
-              if association.is_a? HasMany
-                association.send("_remove", self)
-              else
-                old_value.send("_#{options[:reverse]}=", nil)
-              end
             end
           end
         end; private "_reverse_association_of_#{name}="
