@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{remodel}
-  s.version = "0.1.3"
+  s.version = "0.1.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Tim Lossen"]
-  s.date = %q{2010-05-03}
+  s.date = %q{2010-07-01}
   s.default_executable = %q{redis-monitor.rb}
   s.description = %q{build your domain model in ruby, persist your objects to redis.}
   s.email = %q{tim@lossen.de}
@@ -29,6 +29,10 @@ Gem::Specification.new do |s|
      "docs/remodel.html",
      "example/book.rb",
      "lib/remodel.rb",
+     "lib/remodel/entity.rb",
+     "lib/remodel/has_many.rb",
+     "lib/remodel/has_one.rb",
+     "lib/remodel/mapper.rb",
      "remodel.gemspec",
      "test/helper.rb",
      "test/test_entity.rb",
