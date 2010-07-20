@@ -47,24 +47,6 @@ module Remodel
     @redis = redis
   end
   
-  def self.context
-    Thread.current[:remodel_context] || raise(MissingContext)
-  end
-
-  def self.context=(c)
-    Thread.current[:remodel_context] = c
-  end
-  
-  def self.in_context(c, &block)
-    old_c = self.context rescue nil
-    begin
-      self.context = c
-      yield
-    ensure
-      self.context = old_c
-    end
-  end
-  
   # Returns the mapper defined for a given class, or the identity mapper.
   def self.mapper_for(clazz)
     mapper_by_class[Class[clazz]]

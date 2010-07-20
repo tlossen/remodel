@@ -2,9 +2,10 @@ module Remodel
 
   # The superclass of all persistent remodel entities.
   class Entity
-    attr_accessor :key
+    attr_accessor :context, :key
 
-    def initialize(attributes = {}, key = nil)
+    def initialize(context, attributes = {}, key = nil)
+      @context = context
       @attributes = {}
       @key = key
       attributes = self.class.default_values.merge(attributes) if key.nil?
@@ -18,8 +19,8 @@ module Remodel
     end
 
     def save
-      @key = self.class.next_key unless @key
-      Remodel.redis.hset(Remodel.context, @key, to_json)
+      @key = next_key unless @key
+      Remodel.redis.hset(@context, @key, to_json)
       self
     end
 
@@ -30,7 +31,7 @@ module Remodel
 
     def reload
       raise EntityNotSaved unless @key
-      initialize(self.class.parse(self.class.fetch(@key)), @key)
+      initialize(@context, self.class.parse(self.class.fetch(@context, @key)), @key)
       instance_variables.each do |var|
         remove_instance_variable(var) if var =~ /^@association_/
       end
@@ -39,7 +40,7 @@ module Remodel
 
     def delete
       raise EntityNotSaved unless @key
-      Remodel.redis.hdel(Remodel.context, @key)
+      Remodel.redis.hdel(@context, @key)
     end
 
     def as_json
@@ -52,20 +53,20 @@ module Remodel
 
     def inspect
       properties = @attributes.map { |name, value| "#{name}: #{value.inspect}" }.join(', ')
-      "\#<#{self.class.name}(#{id}) #{properties}>"
+      "\#<#{self.class.name}(#{context}, #{id}) #{properties}>"
     end
 
-    def self.create(attributes = {})
-      new(attributes).save
+    def self.create(context, attributes = {})
+      new(context, attributes).save
     end
 
-    def self.find(key)
+    def self.find(context, key)
       key = "#{key_prefix}:#{key}" if key.kind_of? Integer
-      restore(key, fetch(key))
+      restore(context, key, fetch(context, key))
     end
 
-    def self.restore(key, json)
-      new(parse(json), key)
+    def self.restore(context, key, json)
+      new(context, parse(json), key)
     end
 
   protected # --- DSL for subclasses ---
@@ -104,8 +105,8 @@ module Remodel
           instance_variable_get(var)
         else
           clazz = Class[options[:class]]
-          value_key = Remodel.redis.hget(Remodel.context, "#{key}:#{name}")
-          instance_variable_set(var, clazz.find(value_key)) if value_key
+          value_key = Remodel.redis.hget(self.context, "#{key}:#{name}")
+          instance_variable_set(var, clazz.find(self.context, value_key)) if value_key
         end
       end
 
@@ -117,10 +118,10 @@ module Remodel
       define_method("_#{name}=") do |value|
         if value
           instance_variable_set(var, value)
-          Remodel.redis.hset(Remodel.context, "#{key}:#{name}", value.key)
+          Remodel.redis.hset(self.context, "#{key}:#{name}", value.key)
         else
           remove_instance_variable(var) if instance_variable_defined? var
-          Remodel.redis.hdel(Remodel.context, "#{key}:#{name}")
+          Remodel.redis.hdel(self.context, "#{key}:#{name}")
         end
       end; private "_#{name}="
 
@@ -148,14 +149,14 @@ module Remodel
 
   private # --- Helper methods ---
 
-    def self.fetch(key)
-      Remodel.redis.hget(Remodel.context, key) || raise(EntityNotFound, "no #{name} with key #{key}")
+    def self.fetch(context, key)
+      Remodel.redis.hget(context, key) || raise(EntityNotFound, "no #{name} with key #{key} in context #{context}")
     end
 
     # Each entity has its own sequence to generate unique ids.
-    def self.next_key
-      id = Remodel.redis.hincrby(Remodel.context, "#{key_prefix}:seq", 1)
-      "#{key_prefix}:#{id}"
+    def next_key
+      id = Remodel.redis.hincrby(@context, "#{self.class.key_prefix}:seq", 1)
+      "#{self.class.key_prefix}:#{id}"
     end
 
     # Default key prefix is the first letter of the class name, in lowercase.

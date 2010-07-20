@@ -13,33 +13,33 @@ class TestEntity < Test::Unit::TestCase
 
   context "new" do
     should "set properties" do
-      foo = Foo.new :x => 1, :y => 2
+      foo = Foo.new('cx', :x => 1, :y => 2)
       assert 1, foo.x
       assert 2, foo.y
     end
 
     should "ignore undefined properties" do
-      foo = Foo.new :z => 3
+      foo = Foo.new('cx', :z => 3)
       assert foo.instance_eval { !@attributes.key? :z }
     end
-
+    
     should "not set the key" do
-      foo = Foo.new :x => 23
+      foo = Foo.new('cx', :x => 23)
       assert_equal nil, foo.key
     end
 
     should "not set the id" do
-      foo = Foo.new :x => 23
+      foo = Foo.new('cx', :x => 23)
       assert_equal nil, foo.id
     end
 
     should "use default values for missing properties" do
-      bar = Bar.new
+      bar = Bar.new('cx')
       assert_equal 123, bar.d
     end
 
     should "not use default values for given properties" do
-      bar = Bar.new :d => 'cool'
+      bar = Bar.new('cx', :d => 'cool')
       assert_equal 'cool', bar.d
     end
   end
@@ -50,46 +50,46 @@ class TestEntity < Test::Unit::TestCase
     end
 
     should "work without attributes" do
-      foo = Foo.create
+      foo = Foo.create('cx')
       assert foo.is_a?(Foo)
     end
 
     should "give the entity a key based on the class name" do
-      assert_equal 'f:1', Foo.create.key
-      assert_equal 'b:1', Bar.create.key
-      assert_equal 'b:2', Bar.create.key
+      assert_equal 'f:1', Foo.create('cx').key
+      assert_equal 'b:1', Bar.create('cx').key
+      assert_equal 'b:2', Bar.create('cx').key
     end
 
     should "give the entity an id which is unique per entity class" do
-      assert_equal 1, Foo.create.id
-      assert_equal 1, Bar.create.id
-      assert_equal 2, Bar.create.id
+      assert_equal 1, Foo.create('cx').id
+      assert_equal 1, Bar.create('cx').id
+      assert_equal 2, Bar.create('cx').id
     end
 
     should "store the entity under its key" do
-      foo = Foo.create :x => 'hello', :y => false
-      assert redis.hexists(context, foo.key)
+      foo = Foo.create('cx', :x => 'hello', :y => false)
+      assert redis.hexists('cx', foo.key)
     end
 
     should "store all properties" do
-      foo = Foo.create :x => 'hello', :y => false
+      foo = Foo.create('cx', :x => 'hello', :y => false)
       foo.reload
       assert_equal 'hello', foo.x
       assert_equal false, foo.y
     end
 
     should "not store the key as a property" do
-      foo = Foo.create :x => 'hello', :y => false
-      assert !(/f:1/ =~ redis.hget(context, foo.key))
+      foo = Foo.create('cx', :x => 'hello', :y => false)
+      assert !(/f:1/ =~ redis.hget('cx', foo.key))
     end
 
     should "use default values for missing properties" do
-      bar = Bar.create
+      bar = Bar.create('cx')
       assert_equal 123, bar.d
     end
 
     should "not use default values for given properties" do
-      bar = Bar.create :d => 'cool'
+      bar = Bar.create('cx', :d => 'cool')
       assert_equal 'cool', bar.d
     end
   end
@@ -100,18 +100,18 @@ class TestEntity < Test::Unit::TestCase
     end
 
     should "give the entity a key, if necessary" do
-      foo = Foo.new.save
+      foo = Foo.new('cx').save
       assert foo.key
     end
 
     should "store the entity under its key" do
-      foo = Foo.new :x => 'hello', :y => false
+      foo = Foo.new('cx', :x => 'hello', :y => false)
       foo.save
-      assert redis.hexists(context, foo.key)
+      assert redis.hexists(foo.context, foo.key)
     end
 
     should "store all properties" do
-      foo = Foo.new :x => 'hello', :y => false
+      foo = Foo.new('cx', :x => 'hello', :y => false)
       foo.save
       foo.reload
       assert_equal 'hello', foo.x
@@ -121,11 +121,11 @@ class TestEntity < Test::Unit::TestCase
 
   context "reload" do
     setup do
-      @foo = Foo.create :x => 'hello', :y => true
+      @foo = Foo.create('cx', :x => 'hello', :y => true)
     end
 
     should "reload all properties" do
-      redis.hset context, @foo.key, %q({"x":23,"y":"adios"})
+      redis.hset @foo.context, @foo.key, %q({"x":23,"y":"adios"})
       @foo.reload
       assert_equal 23, @foo.x
       assert_equal 'adios', @foo.y
@@ -144,19 +144,19 @@ class TestEntity < Test::Unit::TestCase
     end
 
     should "raise EntityNotFound if the entity does not exist any more" do
-      redis.hdel context, @foo.key
+      redis.hdel @foo.context, @foo.key
       assert_raise(Remodel::EntityNotFound) { @foo.reload }
     end
 
     should "raise EntityNotSaved if the entity was never saved" do
-      assert_raise(Remodel::EntityNotSaved) { Foo.new.reload }
+      assert_raise(Remodel::EntityNotSaved) { Foo.new('cx').reload }
     end
   end
 
   context "update" do
     setup do
       redis.flushdb
-      @foo = Foo.create :x => 'Tim', :y => true
+      @foo = Foo.create('cx', :x => 'Tim', :y => true)
     end
 
     should "set the given properties" do
@@ -176,22 +176,22 @@ class TestEntity < Test::Unit::TestCase
   context "delete" do
     setup do
       redis.flushdb
-      @foo = Foo.create :x => 'Tim', :y => true
+      @foo = Foo.create('cx', :x => 'Tim', :y => true)
     end
 
     should "delete the given entity" do
       @foo.delete
-      assert_nil redis.hget(context, @foo.key)
+      assert_nil redis.hget(@foo.context, @foo.key)
     end
 
     should "ensure that the entity is persistent" do
-      assert_raise(Remodel::EntityNotSaved) { Foo.new.delete }
+      assert_raise(Remodel::EntityNotSaved) { Foo.new('cx').delete }
     end
   end
 
   context "to_json" do
     should "serialize to json" do
-      foo = Foo.new :x => 42, :y => true
+      foo = Foo.new('cx', :x => 42, :y => true)
       assert_match /"x":42/, foo.to_json
       assert_match /"y":true/, foo.to_json
     end
@@ -199,7 +199,7 @@ class TestEntity < Test::Unit::TestCase
 
   context "as_json" do
     should "serialize into a hash" do
-      foo = Foo.create :x => 42, :y => true
+      foo = Foo.create('cx', :x => 42, :y => true)
       expected = { :id => foo.id, :x => 42, :y => true }
       assert_equal expected, foo.as_json
     end
@@ -208,7 +208,7 @@ class TestEntity < Test::Unit::TestCase
   context "#set_key_prefix" do
     should "use the given key prefix" do
       class Custom < Remodel::Entity; set_key_prefix 'my'; end
-      assert_match /^my:\d+$/, Custom.create.key
+      assert_match /^my:\d+$/, Custom.create('cx').key
     end
 
     should "ensure that the prefix is letters only" do
@@ -221,34 +221,34 @@ class TestEntity < Test::Unit::TestCase
   context "#find" do
     setup do
       redis.flushdb
-      @foo = Foo.create :x => 'hello', :y => 123
-      Foo.create :x => 'hallo', :y => 124
+      @foo = Foo.create('cx', :x => 'hello', :y => 123)
+      Foo.create('cx', :x => 'hallo', :y => 124)
     end
 
     should "find and load an entity by key" do
-      foo = Foo.find(@foo.key)
+      foo = Foo.find(@foo.context, @foo.key)
       assert_equal foo.x, @foo.x
       assert_equal foo.y, @foo.y
     end
 
     should "find and load an entity by id" do
-      foo = Foo.find(@foo.id)
+      foo = Foo.find(@foo.context, @foo.id)
       assert_equal foo.x, @foo.x
       assert_equal foo.y, @foo.y
     end
 
     should "reject a key which does not exist" do
-      assert_raise(Remodel::EntityNotFound) { Foo.find('x:66') }
+      assert_raise(Remodel::EntityNotFound) { Foo.find('cx', 'x:66') }
     end
 
     should "reject an id which does not exist" do
-      assert_raise(Remodel::EntityNotFound) { Foo.find(66) }
+      assert_raise(Remodel::EntityNotFound) { Foo.find('cx', 66) }
     end
   end
 
   context "properties" do
     should "have property x" do
-      foo = Foo.new
+      foo = Foo.new('cx')
       foo.x = 23
       assert_equal 23, foo.x
       foo.x += 10
@@ -256,45 +256,45 @@ class TestEntity < Test::Unit::TestCase
     end
 
     should "not have property z" do
-      foo = Foo.new
+      foo = Foo.new('cx')
       assert_raise(NoMethodError) { foo.z }
       assert_raise(NoMethodError) { foo.z = 42 }
     end
 
     context "types" do
       should "work with nil" do
-        foo = Foo.create :x => nil
+        foo = Foo.create('cx', :x => nil)
         assert_equal nil, foo.reload.x
       end
 
       should "work with booleans" do
-        foo = Foo.create :x => false
+        foo = Foo.create('cx', :x => false)
         assert_equal false, foo.reload.x
       end
 
       should "work with integers" do
-        foo = Foo.create :x => -42
+        foo = Foo.create('cx', :x => -42)
         assert_equal -42, foo.reload.x
       end
 
       should "work with floats" do
-        foo = Foo.create :x => 3.141
+        foo = Foo.create('cx', :x => 3.141)
         assert_equal 3.141, foo.reload.x
       end
 
       should "work with strings" do
-        foo = Foo.create :x => 'hello'
+        foo = Foo.create('cx', :x => 'hello')
         assert_equal 'hello', foo.reload.x
       end
 
       should "work with lists" do
-        foo = Foo.create :x => [1, 2, 3]
+        foo = Foo.create('cx', :x => [1, 2, 3])
         assert_equal [1, 2, 3], foo.reload.x
       end
 
       should "work with hashes" do
         hash = { 'a' => 17, 'b' => 'test' }
-        foo = Foo.create :x => hash
+        foo = Foo.create('cx', :x => hash)
         assert_equal hash, foo.reload.x
       end
     end
@@ -302,8 +302,8 @@ class TestEntity < Test::Unit::TestCase
 
   context "#restore" do
     should "restore an entity from json" do
-      before = Foo.create :x => 42, :y => true
-      after = Foo.restore(before.key, before.to_json)
+      before = Foo.create('cx', :x => 42, :y => true)
+      after = Foo.restore(before.context, before.key, before.to_json)
       assert_equal before.key, after.key
       assert_equal before.x, after.x
       assert_equal before.y, after.y

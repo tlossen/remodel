@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + "/../lib/remodel"
+require File.dirname(__FILE__) + "/../lib/remodel-h"
 
 class Book < Remodel::Entity
   has_many :chapters, :class => 'Chapter', :reverse => :book

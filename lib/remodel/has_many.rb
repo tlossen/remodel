@@ -3,12 +3,12 @@ module Remodel
   # Represents the many-end of a many-to-one or many-to-many association.
   class HasMany < Array
     def initialize(this, clazz, key, reverse = nil)
-      super _fetch(clazz, key)
+      super _fetch(clazz, this.context, key)
       @this, @clazz, @key, @reverse = this, clazz, key, reverse
     end
 
     def create(attributes = {})
-      add(@clazz.create(attributes))
+      add(@clazz.create(@this.context, attributes))
     end
 
     def find(id)
@@ -56,14 +56,14 @@ module Remodel
     end
 
     def _store
-      Remodel.redis.hset(Remodel.context, @key, JSON.generate(self.map(&:key)))
+      Remodel.redis.hset(@this.context, @key, JSON.generate(self.map(&:key)))
     end
 
-    def _fetch(clazz, key)
-      keys = JSON.parse(Remodel.redis.hget(Remodel.context, key) || '[]')
-      values = keys.empty? ? [] : Remodel.redis.hmget(Remodel.context, *keys)
+    def _fetch(clazz, context, key)
+      keys = JSON.parse(Remodel.redis.hget(context, key) || '[]')
+      values = keys.empty? ? [] : Remodel.redis.hmget(context, *keys)
       keys.zip(values).map do |key, json|
-        clazz.restore(key, json) if json
+        clazz.restore(context, key, json) if json
       end.compact
     end
   end

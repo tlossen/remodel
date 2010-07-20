@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{remodel-h}
-  s.version = "0.1.6"
+  s.version = "0.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Tim Lossen"]
@@ -49,7 +49,6 @@ Gem::Specification.new do |s|
   s.summary = %q{remodel variant which uses hashes}
   s.test_files = [
     "test/helper.rb",
-     "test/test_context.rb",
      "test/test_entity.rb",
      "test/test_many_to_many.rb",
      "test/test_many_to_one.rb",

@@ -10,10 +10,4 @@ class Test::Unit::TestCase
     Remodel.redis
   end
   
-  def context
-    Remodel.context
-  end
-
 end
-
-Remodel.context = 'foo'

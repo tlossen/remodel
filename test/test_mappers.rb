@@ -15,7 +15,7 @@ class TestMappers < Test::Unit::TestCase
 
   context "create" do
     setup do
-      @item = Item.create :time => Time.at(1234567890), :date => Date.parse("1972-06-16")
+      @item = Item.create('cx', :time => Time.at(1234567890), :date => Date.parse("1972-06-16"))
     end
 
     should "store unmapped values" do
@@ -35,13 +35,13 @@ class TestMappers < Test::Unit::TestCase
     end
 
     should "serialize mapped values correctly" do
-      json = redis.hget(context, @item.key)
+      json = redis.hget(@item.context, @item.key)
       assert_match /1234567890/, json
       assert_match /"1972-06-16"/, json
     end
 
     should "handle nil values" do
-      item = Item.create
+      item = Item.create('cx')
       assert_nil item.boolean
       assert_nil item.string
       assert_nil item.integer
@@ -53,14 +53,14 @@ class TestMappers < Test::Unit::TestCase
     end
 
     should "reject invalid types" do
-      assert_raise(Remodel::InvalidType) { Item.create :boolean => 'hello' }
-      assert_raise(Remodel::InvalidType) { Item.create :string => true }
-      assert_raise(Remodel::InvalidType) { Item.create :integer => 33.5 }
-      assert_raise(Remodel::InvalidType) { Item.create :float => 5 }
-      assert_raise(Remodel::InvalidType) { Item.create :array => {} }
-      assert_raise(Remodel::InvalidType) { Item.create :hash => [] }
-      assert_raise(Remodel::InvalidType) { Item.create :time => Date.new }
-      assert_raise(Remodel::InvalidType) { Item.create :date => Time.now }
+      assert_raise(Remodel::InvalidType) { Item.create('cx', :boolean => 'hello') }
+      assert_raise(Remodel::InvalidType) { Item.create('cx', :string => true) }
+      assert_raise(Remodel::InvalidType) { Item.create('cx', :integer => 33.5) }
+      assert_raise(Remodel::InvalidType) { Item.create('cx', :float => 5) }
+      assert_raise(Remodel::InvalidType) { Item.create('cx', :array => {}) }
+      assert_raise(Remodel::InvalidType) { Item.create('cx', :hash => []) }
+      assert_raise(Remodel::InvalidType) { Item.create('cx', :time => Date.new) }
+      assert_raise(Remodel::InvalidType) { Item.create('cx', :date => Time.now) }
     end
   end
 

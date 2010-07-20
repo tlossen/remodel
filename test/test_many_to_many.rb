@@ -14,19 +14,19 @@ class TestManyToMany < Test::Unit::TestCase
 
   context "both associations" do
     should "be empty by default" do
-      assert_equal [], Person.new.groups
-      assert_equal [], Group.new.members
+      assert_equal [], Person.new('cx').groups
+      assert_equal [], Group.new('cx').members
     end
 
     context "create" do
       should "add a new group to both associations" do
-        tim = Person.create :name => 'tim'
+        tim = Person.create('cx', :name => 'tim')
         rugb = tim.groups.create :name => 'rug-b'
         assert_equal [tim], rugb.members
       end
 
       should "add a new person to both associations" do
-        rugb = Group.create :name => 'rug-b'
+        rugb = Group.create('cx', :name => 'rug-b')
         tim = rugb.members.create :name => 'tim'
         assert_equal [rugb], tim.groups
       end
@@ -34,8 +34,8 @@ class TestManyToMany < Test::Unit::TestCase
 
     context "add" do
       setup do
-        @tim = Person.create :name => 'tim'
-        @rugb = Group.create :name => 'rug-b'
+        @tim = Person.create('cx', :name => 'tim')
+        @rugb = Group.create('cx', :name => 'rug-b')
       end
 
       should "add a new group to both associations" do
@@ -53,7 +53,7 @@ class TestManyToMany < Test::Unit::TestCase
 
     context "remove" do
       setup do
-        @tim = Person.create :name => 'tim'
+        @tim = Person.create('cx', :name => 'tim')
         @rugb = @tim.groups.create(:name => 'rug-b')
         @erlang = @tim.groups.create(:name => 'erlang')
         @aws = @tim.groups.create(:name => 'aws')

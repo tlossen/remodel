@@ -14,14 +14,14 @@ class TestOneToOne < Test::Unit::TestCase
 
   context "both associations" do
     should "be nil by default" do
-      assert_equal nil, Man.new.wife
-      assert_equal nil, Woman.new.husband
+      assert_equal nil, Man.new('cx').wife
+      assert_equal nil, Woman.new('cx').husband
     end
 
     context "setter" do
       setup do
-        @bill = Man.create :name => 'Bill'
-        @mary = Woman.create :name => 'Mary'
+        @bill = Man.create('cx', :name => 'Bill')
+        @mary = Woman.create('cx', :name => 'Mary')
       end
 
       context "non-nil value" do
