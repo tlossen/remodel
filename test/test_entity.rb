@@ -68,7 +68,7 @@ class TestEntity < Test::Unit::TestCase
 
     should "store the entity under its key" do
       foo = Foo.create :x => 'hello', :y => false
-      assert redis.exists(foo.key)
+      assert redis.hexists(context, foo.key)
     end
 
     should "store all properties" do
@@ -80,7 +80,7 @@ class TestEntity < Test::Unit::TestCase
 
     should "not store the key as a property" do
       foo = Foo.create :x => 'hello', :y => false
-      assert !(/f:1/ =~ redis.get(foo.key))
+      assert !(/f:1/ =~ redis.hget(context, foo.key))
     end
 
     should "use default values for missing properties" do
@@ -107,7 +107,7 @@ class TestEntity < Test::Unit::TestCase
     should "store the entity under its key" do
       foo = Foo.new :x => 'hello', :y => false
       foo.save
-      assert redis.exists(foo.key)
+      assert redis.hexists(context, foo.key)
     end
 
     should "store all properties" do
@@ -125,7 +125,7 @@ class TestEntity < Test::Unit::TestCase
     end
 
     should "reload all properties" do
-      redis.set @foo.key, %q({"x":23,"y":"adios"})
+      redis.hset context, @foo.key, %q({"x":23,"y":"adios"})
       @foo.reload
       assert_equal 23, @foo.x
       assert_equal 'adios', @foo.y
@@ -144,7 +144,7 @@ class TestEntity < Test::Unit::TestCase
     end
 
     should "raise EntityNotFound if the entity does not exist any more" do
-      redis.del @foo.key
+      redis.hdel context, @foo.key
       assert_raise(Remodel::EntityNotFound) { @foo.reload }
     end
 
@@ -181,7 +181,7 @@ class TestEntity < Test::Unit::TestCase
 
     should "delete the given entity" do
       @foo.delete
-      assert_nil redis.get(@foo.key)
+      assert_nil redis.hget(context, @foo.key)
     end
 
     should "ensure that the entity is persistent" do
@@ -243,19 +243,6 @@ class TestEntity < Test::Unit::TestCase
 
     should "reject an id which does not exist" do
       assert_raise(Remodel::EntityNotFound) { Foo.find(66) }
-    end
-  end
-
-  context "#all" do
-    setup do
-      redis.flushdb
-      17.times { |i| Foo.create :x => 'hello', :y => i }
-      5.times { |i| Bar.create }
-    end
-
-    should "find all entities of the given class" do
-      assert_equal 17, Foo.all.size
-      assert_equal 5, Bar.all.size
     end
   end
 

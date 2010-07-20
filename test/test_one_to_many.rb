@@ -26,7 +26,7 @@ class TestOneToMany < Test::Unit::TestCase
       should "return the associated entity" do
         puzzle = Puzzle.create :topic => 'animals'
         piece = Piece.create
-        redis.set("#{piece.key}:puzzle", puzzle.key)
+        redis.hset(context, "#{piece.key}:puzzle", puzzle.key)
         assert_equal 'animals', piece.puzzle.topic
       end
     end
@@ -40,7 +40,7 @@ class TestOneToMany < Test::Unit::TestCase
         puzzle = Puzzle.create
         piece = Piece.create
         piece.puzzle = puzzle
-        assert_equal puzzle.key, redis.get("#{piece.key}:puzzle")
+        assert_equal puzzle.key, redis.hget(context, "#{piece.key}:puzzle")
       end
 
       should "add the entity to the reverse association" do
@@ -69,7 +69,7 @@ class TestOneToMany < Test::Unit::TestCase
         piece = Piece.create
         piece.puzzle = Puzzle.create
         piece.puzzle = nil
-        assert_nil redis.get("#{piece.key}:puzzle")
+        assert_nil redis.hget(context, "#{piece.key}:puzzle")
       end
 
       should "remove the entity from the reverse association if set to nil" do
@@ -87,7 +87,7 @@ class TestOneToMany < Test::Unit::TestCase
     should "reset has_one associations" do
       piece = Piece.create :color => 'black'
       piece.puzzle = Puzzle.create
-      redis.del "#{piece.key}:puzzle"
+      redis.hdel context, "#{piece.key}:puzzle"
       piece.reload
       assert_nil piece.puzzle
     end

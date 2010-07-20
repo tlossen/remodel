@@ -35,7 +35,7 @@ class TestMappers < Test::Unit::TestCase
     end
 
     should "serialize mapped values correctly" do
-      json = redis.get(@item.key)
+      json = redis.hget(context, @item.key)
       assert_match /1234567890/, json
       assert_match /"1972-06-16"/, json
     end

@@ -1,4 +1,5 @@
 require 'helper'
+require 'json'
 
 class TestManyToOne < Test::Unit::TestCase
 
@@ -24,8 +25,10 @@ class TestManyToOne < Test::Unit::TestCase
 
       should "return any existing children" do
         puzzle = Puzzle.create
-        redis.rpush "#{puzzle.key}:pieces", Piece.create(:color => 'red').key
-        redis.rpush "#{puzzle.key}:pieces", Piece.create(:color => 'blue').key
+        red_piece = Piece.create(:color => 'red')
+        blue_piece = Piece.create(:color => 'blue')
+        value = JSON.generate([red_piece.key, blue_piece.key])
+        redis.hset context, "#{puzzle.key}:pieces", value
         assert_equal 2, puzzle.pieces.size
         assert_equal Piece, puzzle.pieces[0].class
         assert_equal 'red', puzzle.pieces[0].color
@@ -95,7 +98,7 @@ class TestManyToOne < Test::Unit::TestCase
     should "reset has_many associations" do
       puzzle = Puzzle.create
       piece = puzzle.pieces.create :color => 'black'
-      redis.del "#{puzzle.key}:pieces"
+      redis.hdel context, "#{puzzle.key}:pieces"
       puzzle.reload
       assert_equal [], puzzle.pieces
     end

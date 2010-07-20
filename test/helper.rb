@@ -9,5 +9,11 @@ class Test::Unit::TestCase
   def redis
     Remodel.redis
   end
+  
+  def context
+    Remodel.context
+  end
 
 end
+
+Remodel.context = 'foo'

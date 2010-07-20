@@ -34,6 +34,7 @@ module Remodel
   class EntityNotSaved < Error; end
   class InvalidKeyPrefix < Error; end
   class InvalidType < Error; end
+  class MissingContext < Error; end
 
   # By default, the redis server is expected to listen at `localhost:6379`.
   # Otherwise you will have to set `Remodel.redis` to a suitably initialized
@@ -45,7 +46,15 @@ module Remodel
   def self.redis=(redis)
     @redis = redis
   end
+  
+  def self.context
+    Thread.current[:remodel_context] || raise(MissingContext)
+  end
 
+  def self.context=(context)
+    Thread.current[:remodel_context] = context
+  end
+  
   # Returns the mapper defined for a given class, or the identity mapper.
   def self.mapper_for(clazz)
     mapper_by_class[Class[clazz]]

@@ -19,7 +19,7 @@ module Remodel
 
     def save
       @key = self.class.next_key unless @key
-      Remodel.redis.set(@key, to_json)
+      Remodel.redis.hset(Remodel.context, @key, to_json)
       self
     end
 
@@ -39,7 +39,7 @@ module Remodel
 
     def delete
       raise EntityNotSaved unless @key
-      Remodel.redis.del(@key)
+      Remodel.redis.hdel(Remodel.context, @key)
     end
 
     def as_json
@@ -62,14 +62,6 @@ module Remodel
     def self.find(key)
       key = "#{key_prefix}:#{key}" if key.kind_of? Integer
       restore(key, fetch(key))
-    end
-
-    def self.all
-      keys = Remodel.redis.keys("#{key_prefix}:*").select { |k| k =~ /:[0-9]+$/ }
-      values = keys.empty? ? [] : Remodel.redis.mget(keys)
-      keys.zip(values).map do |key, json|
-        restore(key, json) if json
-      end.compact
     end
 
     def self.restore(key, json)
@@ -112,7 +104,7 @@ module Remodel
           instance_variable_get(var)
         else
           clazz = Class[options[:class]]
-          value_key = Remodel.redis.get("#{key}:#{name}")
+          value_key = Remodel.redis.hget(Remodel.context, "#{key}:#{name}")
           instance_variable_set(var, clazz.find(value_key)) if value_key
         end
       end
@@ -125,10 +117,10 @@ module Remodel
       define_method("_#{name}=") do |value|
         if value
           instance_variable_set(var, value)
-          Remodel.redis.set("#{key}:#{name}", value.key)
+          Remodel.redis.hset(Remodel.context, "#{key}:#{name}", value.key)
         else
           remove_instance_variable(var) if instance_variable_defined? var
-          Remodel.redis.del("#{key}:#{name}")
+          Remodel.redis.hdel(Remodel.context, "#{key}:#{name}")
         end
       end; private "_#{name}="
 
@@ -157,12 +149,12 @@ module Remodel
   private # --- Helper methods ---
 
     def self.fetch(key)
-      Remodel.redis.get(key) || raise(EntityNotFound, "no #{name} with key #{key}")
+      Remodel.redis.hget(Remodel.context, key) || raise(EntityNotFound, "no #{name} with key #{key}")
     end
 
     # Each entity has its own sequence to generate unique ids.
     def self.next_key
-      id = Remodel.redis.incr("#{key_prefix}:seq")
+      id = Remodel.redis.hincrby(Remodel.context, "#{key_prefix}:seq", 1)
       "#{key_prefix}:#{id}"
     end
 

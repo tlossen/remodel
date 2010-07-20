@@ -4,7 +4,7 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "remodel"
+    gem.name = "remodel-h"
     gem.summary = "a minimal ORM (object-redis-mapper)"
     gem.description = "build your domain model in ruby, persist your objects to redis."
     gem.email = "tim@lossen.de"

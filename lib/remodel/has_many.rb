@@ -29,13 +29,13 @@ module Remodel
 
     def _add(entity)
       self << entity
-      Remodel.redis.rpush(@key, entity.key)
+      _store
       entity
     end
 
     def _remove(entity)
       delete_if { |x| x.key == entity.key }
-      Remodel.redis.lrem(@key, 0, entity.key)
+      _store
       entity
     end
 
@@ -55,9 +55,13 @@ module Remodel
       end
     end
 
+    def _store
+      Remodel.redis.hset(Remodel.context, @key, JSON.generate(self.map(&:key)))
+    end
+
     def _fetch(clazz, key)
-      keys = Remodel.redis.lrange(key, 0, -1)
-      values = keys.empty? ? [] : Remodel.redis.mget(keys)
+      keys = JSON.parse(Remodel.redis.hget(Remodel.context, key) || '[]')
+      values = keys.empty? ? [] : Remodel.redis.hmget(Remodel.context, *keys)
       keys.zip(values).map do |key, json|
         clazz.restore(key, json) if json
       end.compact
