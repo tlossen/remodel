@@ -9,9 +9,9 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Tim Lossen"]
-  s.date = %q{2010-07-19}
+  s.date = %q{2010-07-20}
   s.default_executable = %q{redis-monitor.rb}
-  s.description = %q{build your domain model in ruby, persist your objects to redis.}
+  s.description = %q{persist your objects to redis hashes.}
   s.email = %q{tim@lossen.de}
   s.executables = ["redis-monitor.rb"]
   s.extra_rdoc_files = [
@@ -32,6 +32,7 @@ Gem::Specification.new do |s|
      "lib/remodel/entity.rb",
      "lib/remodel/has_many.rb",
      "lib/remodel/mapper.rb",
+     "remodel-h.gemspec",
      "remodel.gemspec",
      "test/helper.rb",
      "test/test_entity.rb",
@@ -46,7 +47,7 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.5}
-  s.summary = %q{a minimal ORM (object-redis-mapper)}
+  s.summary = %q{remodel variant which uses hashes}
   s.test_files = [
     "test/helper.rb",
      "test/test_entity.rb",

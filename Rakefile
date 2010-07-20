@@ -5,8 +5,8 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "remodel-h"
-    gem.summary = "a minimal ORM (object-redis-mapper)"
-    gem.description = "build your domain model in ruby, persist your objects to redis."
+    gem.summary = "remodel variant which uses hashes"
+    gem.description = "persist your objects to redis hashes."
     gem.email = "tim@lossen.de"
     gem.homepage = "http://github.com/tlossen/remodel"
     gem.authors = ["Tim Lossen"]
