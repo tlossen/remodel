@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{remodel-h}
-  s.version = "0.1.4"
+  s.version = "0.1.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Tim Lossen"]
@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
      "docs/docco.css",
      "docs/remodel.html",
      "example/book.rb",
-     "lib/remodel.rb",
+     "lib/remodel-h.rb",
      "lib/remodel/entity.rb",
      "lib/remodel/has_many.rb",
      "lib/remodel/mapper.rb",
