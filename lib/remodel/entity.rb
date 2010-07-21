@@ -15,7 +15,7 @@ module Remodel
     end
 
     def id
-      key && key.split(':').last.to_i
+      key && key.match(/\d+/)[0].to_i
     end
 
     def save
@@ -61,7 +61,7 @@ module Remodel
     end
 
     def self.find(context, key)
-      key = "#{key_prefix}:#{key}" if key.kind_of? Integer
+      key = "#{key_prefix}#{key}" if key.kind_of? Integer
       restore(context, key, fetch(context, key))
     end
 
@@ -92,7 +92,7 @@ module Remodel
           instance_variable_get(var)
         else
           clazz = Class[options[:class]]
-          instance_variable_set(var, HasMany.new(self, clazz, "#{key}:#{name}", options[:reverse]))
+          instance_variable_set(var, HasMany.new(self, clazz, "#{key}_#{name}", options[:reverse]))
         end
       end
     end
@@ -105,7 +105,7 @@ module Remodel
           instance_variable_get(var)
         else
           clazz = Class[options[:class]]
-          value_key = Remodel.redis.hget(self.context, "#{key}:#{name}")
+          value_key = Remodel.redis.hget(self.context, "#{key}_#{name}")
           instance_variable_set(var, clazz.find(self.context, value_key)) if value_key
         end
       end
@@ -118,10 +118,10 @@ module Remodel
       define_method("_#{name}=") do |value|
         if value
           instance_variable_set(var, value)
-          Remodel.redis.hset(self.context, "#{key}:#{name}", value.key)
+          Remodel.redis.hset(self.context, "#{key}_#{name}", value.key)
         else
           remove_instance_variable(var) if instance_variable_defined? var
-          Remodel.redis.hdel(self.context, "#{key}:#{name}")
+          Remodel.redis.hdel(self.context, "#{key}_#{name}")
         end
       end; private "_#{name}="
 
@@ -155,8 +155,8 @@ module Remodel
 
     # Each entity has its own sequence to generate unique ids.
     def next_key
-      id = Remodel.redis.hincrby(@context, "#{self.class.key_prefix}:seq", 1)
-      "#{self.class.key_prefix}:#{id}"
+      id = Remodel.redis.hincrby(@context, "#{self.class.key_prefix}", 1)
+      "#{self.class.key_prefix}#{id}"
     end
 
     # Default key prefix is the first letter of the class name, in lowercase.

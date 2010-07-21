@@ -55,9 +55,9 @@ class TestEntity < Test::Unit::TestCase
     end
 
     should "give the entity a key based on the class name" do
-      assert_equal 'f:1', Foo.create('cx').key
-      assert_equal 'b:1', Bar.create('cx').key
-      assert_equal 'b:2', Bar.create('cx').key
+      assert_equal 'f1', Foo.create('cx').key
+      assert_equal 'b1', Bar.create('cx').key
+      assert_equal 'b2', Bar.create('cx').key
     end
 
     should "give the entity an id which is unique per entity class" do
@@ -208,7 +208,7 @@ class TestEntity < Test::Unit::TestCase
   context "#set_key_prefix" do
     should "use the given key prefix" do
       class Custom < Remodel::Entity; set_key_prefix 'my'; end
-      assert_match /^my:\d+$/, Custom.create('cx').key
+      assert_match /^my\d+$/, Custom.create('cx').key
     end
 
     should "ensure that the prefix is letters only" do

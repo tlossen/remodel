@@ -28,7 +28,7 @@ class TestManyToOne < Test::Unit::TestCase
         red_piece = Piece.create('cx', :color => 'red')
         blue_piece = Piece.create('cx', :color => 'blue')
         value = JSON.generate([red_piece.key, blue_piece.key])
-        redis.hset 'cx', "#{puzzle.key}:pieces", value
+        redis.hset 'cx', "#{puzzle.key}_pieces", value
         assert_equal 2, puzzle.pieces.size
         assert_equal Piece, puzzle.pieces[0].class
         assert_equal 'red', puzzle.pieces[0].color
@@ -98,7 +98,7 @@ class TestManyToOne < Test::Unit::TestCase
     should "reset has_many associations" do
       puzzle = Puzzle.create('cx')
       piece = puzzle.pieces.create :color => 'black'
-      redis.hdel 'cx', "#{puzzle.key}:pieces"
+      redis.hdel 'cx', "#{puzzle.key}_pieces"
       puzzle.reload
       assert_equal [], puzzle.pieces
     end
