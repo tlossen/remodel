@@ -173,22 +173,6 @@ class TestEntity < Test::Unit::TestCase
     end
   end
 
-  context "delete" do
-    setup do
-      redis.flushdb
-      @foo = Foo.create('cx', :x => 'Tim', :y => true)
-    end
-
-    should "delete the given entity" do
-      @foo.delete
-      assert_nil redis.hget(@foo.context, @foo.key)
-    end
-
-    should "ensure that the entity is persistent" do
-      assert_raise(Remodel::EntityNotSaved) { Foo.new('cx').delete }
-    end
-  end
-
   context "to_json" do
     should "serialize to json" do
       foo = Foo.new('cx', :x => 42, :y => true)

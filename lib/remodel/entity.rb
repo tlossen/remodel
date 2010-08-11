@@ -41,6 +41,9 @@ module Remodel
     def delete
       raise EntityNotSaved unless @key
       Remodel.redis.hdel(@context, @key)
+      instance_variables.each do |var|
+        Remodel.redis.hdel(@context, var.sub('@association', @key)) if var =~ /^@association_/
+      end
     end
 
     def as_json
