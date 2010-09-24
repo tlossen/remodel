@@ -183,7 +183,7 @@ module Remodel
       result = {}
       attributes.each do |name, value|
         name = name.to_sym
-        result[name] = mapper[name].unpack(value)
+        result[name] = mapper[name].unpack(value) if mapper[name]
       end
       result
     end
