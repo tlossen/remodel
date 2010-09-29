@@ -14,8 +14,8 @@ class TestEntity < Test::Unit::TestCase
   context "new" do
     should "set properties" do
       foo = Foo.new('cx', :x => 1, :y => 2)
-      assert 1, foo.x
-      assert 2, foo.y
+      assert_equal 1, foo.x
+      assert_equal 2, foo.y
     end
 
     should "ignore undefined properties" do

@@ -42,7 +42,7 @@ module Remodel
       raise EntityNotSaved unless @key
       Remodel.redis.hdel(@context, @key)
       instance_variables.each do |var|
-        Remodel.redis.hdel(@context, var.sub('@association', @key)) if var =~ /^@association_/
+        Remodel.redis.hdel(@context, var.to_s.sub('@association', @key)) if var =~ /^@association_/
       end
     end
 
