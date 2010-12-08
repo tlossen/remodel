@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{remodel-h}
-  s.version = "0.2.3"
+  s.version = "0.2.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Tim Lossen"]
-  s.date = %q{2010-09-24}
+  s.date = %q{2010-12-08}
   s.default_executable = %q{redis-monitor.rb}
   s.description = %q{persist your objects to redis hashes.}
   s.email = %q{tim@lossen.de}

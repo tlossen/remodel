@@ -22,7 +22,7 @@ class TestManyToOne < Test::Unit::TestCase
       should "return an empty list by default" do
         assert_equal [], Puzzle.create('cx').pieces
       end
-
+      
       should "return any existing children" do
         puzzle = Puzzle.create('cx')
         red_piece = Piece.create('cx', :color => 'red')
@@ -30,6 +30,16 @@ class TestManyToOne < Test::Unit::TestCase
         value = JSON.generate([red_piece.key, blue_piece.key])
         redis.hset 'cx', "#{puzzle.key}_pieces", value
         assert_equal 2, puzzle.pieces.size
+        assert_equal Piece, puzzle.pieces[0].class
+        assert_equal 'red', puzzle.pieces[0].color
+      end
+
+      should "not return any child multiple times" do
+        puzzle = Puzzle.create('cx')
+        red_piece = Piece.create('cx', :color => 'red')
+        value = JSON.generate([red_piece.key, red_piece.key])
+        redis.hset 'cx', "#{puzzle.key}_pieces", value
+        assert_equal 1, puzzle.pieces.size
         assert_equal Piece, puzzle.pieces[0].class
         assert_equal 'red', puzzle.pieces[0].color
       end

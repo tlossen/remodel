@@ -60,7 +60,7 @@ module Remodel
     end
 
     def _fetch(clazz, context, key)
-      keys = JSON.parse(Remodel.redis.hget(context, key) || '[]')
+      keys = JSON.parse(Remodel.redis.hget(context, key) || '[]').uniq
       values = keys.empty? ? [] : Remodel.redis.hmget(context, *keys)
       keys.zip(values).map do |key, json|
         clazz.restore(context, key, json) if json
