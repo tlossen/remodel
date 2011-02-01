@@ -8,7 +8,6 @@ module Remodel
       @context = context
       @attributes = {}
       @key = key
-      attributes = self.class.default_values.merge(attributes) if key.nil?
       attributes.each do |name, value|
         send("#{name}=", value) if respond_to? "#{name}="
       end
@@ -47,7 +46,7 @@ module Remodel
     end
 
     def as_json
-      { :id => id }.merge(@attributes)
+      { :id => id }.merge(attributes)
     end
 
     def to_json
@@ -55,7 +54,7 @@ module Remodel
     end
 
     def inspect
-      properties = @attributes.map { |name, value| "#{name}: #{value.inspect}" }.join(', ')
+      properties = attributes.map { |name, value| "#{name}: #{value.inspect}" }.join(', ')
       "\#<#{self.class.name}(#{context}, #{id}) #{properties}>"
     end
 
@@ -82,8 +81,8 @@ module Remodel
     def self.property(name, options = {})
       name = name.to_sym
       mapper[name] = Remodel.mapper_for(options[:class])
-      default_values[name] = options[:default] if options.has_key?(:default)
-      define_method(name) { @attributes[name] }
+      default_value = options[:default]
+      define_method(name) { @attributes[name].nil? ? default_value : @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
 
@@ -152,6 +151,14 @@ module Remodel
 
   private # --- Helper methods ---
 
+    def attributes
+      result = {}
+      self.class.mapper.keys.each do |name|
+        result[name] = send(name)
+      end
+      result
+    end
+
     def self.fetch(context, key)
       Remodel.redis.hget(context, key) || raise(EntityNotFound, "no #{name} with key #{key} in context #{context}")
     end
@@ -191,10 +198,6 @@ module Remodel
     # Lazy init
     def self.mapper
       @mapper ||= {}
-    end
-
-    def self.default_values
-      @default_values ||= {}
     end
 
   end

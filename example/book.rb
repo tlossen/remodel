@@ -4,6 +4,7 @@ class Book < Remodel::Entity
   has_many :chapters, :class => 'Chapter', :reverse => :book
   property :title, :class => 'String'
   property :year, :class => 'Integer'
+  property :author, :class => 'String', :default => '(anonymous)'
 end
 
 class Chapter < Remodel::Entity

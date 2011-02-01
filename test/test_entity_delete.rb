@@ -23,6 +23,7 @@ class TestEntityDelete < Test::Unit::TestCase
       @group.members.create(:name => 'Tim')
       @group.members.create(:name => 'Ben')
       @group.room = Room.create(:name => 'some office')
+      # TODO: @group.reload
     end
 
     should "ensure that the entity is persistent" do

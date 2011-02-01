@@ -11,6 +11,34 @@ end
 
 class TestEntity < Test::Unit::TestCase
 
+  context "[default values]" do
+    should "be returned for missing properties" do
+      bar = Bar.new('cx')
+      assert_equal 123, bar.d
+    end
+
+    should "be returned for properties that are nil" do
+      bar = Bar.new('cx', :d => 'cool')
+      bar.d = nil
+      assert_equal 123, bar.d
+    end
+
+    should "not be returned for given properties" do
+      bar = Bar.new('cx', :d => 'cool')
+      assert_equal 'cool', bar.d
+    end
+
+    should "not be stored" do
+      bar = Bar.create('cx')
+      assert !(/123/ =~ redis.hget('cx', bar.key))
+    end
+
+    should "be returned by as_json" do
+      bar = Bar.new('cx')
+      assert_equal 123, bar.as_json[:d]
+    end
+  end
+
   context "new" do
     should "set properties" do
       foo = Foo.new('cx', :x => 1, :y => 2)
@@ -22,7 +50,7 @@ class TestEntity < Test::Unit::TestCase
       foo = Foo.new('cx', :z => 3)
       assert foo.instance_eval { !@attributes.key? :z }
     end
-    
+
     should "not set the key" do
       foo = Foo.new('cx', :x => 23)
       assert_equal nil, foo.key
@@ -31,16 +59,6 @@ class TestEntity < Test::Unit::TestCase
     should "not set the id" do
       foo = Foo.new('cx', :x => 23)
       assert_equal nil, foo.id
-    end
-
-    should "use default values for missing properties" do
-      bar = Bar.new('cx')
-      assert_equal 123, bar.d
-    end
-
-    should "not use default values for given properties" do
-      bar = Bar.new('cx', :d => 'cool')
-      assert_equal 'cool', bar.d
     end
   end
 
@@ -81,16 +99,6 @@ class TestEntity < Test::Unit::TestCase
     should "not store the key as a property" do
       foo = Foo.create('cx', :x => 'hello', :y => false)
       assert !(/f:1/ =~ redis.hget('cx', foo.key))
-    end
-
-    should "use default values for missing properties" do
-      bar = Bar.create('cx')
-      assert_equal 123, bar.d
-    end
-
-    should "not use default values for given properties" do
-      bar = Bar.create('cx', :d => 'cool')
-      assert_equal 'cool', bar.d
     end
   end
 
@@ -222,7 +230,7 @@ class TestEntity < Test::Unit::TestCase
     end
 
     should "reject a key which does not exist" do
-      assert_raise(Remodel::EntityNotFound) { Foo.find('cx', 'x:66') }
+      assert_raise(Remodel::EntityNotFound) { Foo.find('cx', 'x66') }
     end
 
     should "reject an id which does not exist" do
