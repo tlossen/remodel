@@ -30,18 +30,22 @@ module Remodel
 
     def reload
       raise EntityNotSaved unless @key
-      initialize(@context, self.class.parse(self.class.fetch(@context, @key)), @key)
-      instance_variables.each do |var|
-        remove_instance_variable(var) if var =~ /^@association_/
+      attributes = self.class.parse(self.class.fetch(@context, @key))
+      initialize(@context, attributes, @key)
+      self.class.associations.each do |name|
+        var = "@#{name}".to_sym
+        remove_instance_variable(var) if instance_variable_defined? var
       end
       self
     end
 
     def delete
       raise EntityNotSaved unless @key
-      Remodel.redis.hdel(@context, @key)
-      instance_variables.each do |var|
-        Remodel.redis.hdel(@context, var.to_s.sub('@association', @key)) if var =~ /^@association_/
+      Remodel.redis.pipelined do
+        Remodel.redis.hdel(@context, @key)
+        self.class.associations.each do |name|
+          Remodel.redis.hdel(@context, "#{@key}_#{name}")
+        end
       end
     end
 
@@ -87,7 +91,8 @@ module Remodel
     end
 
     def self.has_many(name, options)
-      var = "@association_#{name}".to_sym
+      associations.push(name)
+      var = "@#{name}".to_sym
 
       define_method(name) do
         if instance_variable_defined? var
@@ -100,7 +105,8 @@ module Remodel
     end
 
     def self.has_one(name, options)
-      var = "@association_#{name}".to_sym
+      associations.push(name)
+      var = "@#{name}".to_sym
 
       define_method(name) do
         if instance_variable_defined? var
@@ -198,6 +204,10 @@ module Remodel
     # Lazy init
     def self.mapper
       @mapper ||= {}
+    end
+
+    def self.associations
+      @associations ||= []
     end
 
   end
