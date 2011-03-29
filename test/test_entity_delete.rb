@@ -20,10 +20,11 @@ class TestEntityDelete < Test::Unit::TestCase
     setup do
       redis.flushdb
       @group = Group.create('cx', :name => 'ruby user group')
-      @group.members.create(:name => 'Tim')
+      @tim = @group.members.create(:name => 'Tim')
       @group.members.create(:name => 'Ben')
-      @group.room = Room.create(:name => 'some office')
-      # TODO: @group.reload
+      @room = Room.create(:name => 'some office')
+      @group.room = @room
+      @group.reload
     end
 
     should "ensure that the entity is persistent" do
@@ -41,6 +42,20 @@ class TestEntityDelete < Test::Unit::TestCase
       assert_nil redis.hget(@group.context, "#{@group.key}_room")
     end
 
-  end
+    context "has_one" do
+      should "be nil if deleted" do
+        @room.delete
+        assert_nil @group.room
+      end
+    end
 
+    context "has_many" do
+      should "be skipped if deleted" do
+        @tim.delete
+        assert_equal 1, @group.members.count
+      end
+    end
+
+  end
+  
 end

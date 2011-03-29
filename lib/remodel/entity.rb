@@ -114,7 +114,8 @@ module Remodel
         else
           clazz = Class[options[:class]]
           value_key = Remodel.redis.hget(self.context, "#{key}_#{name}")
-          instance_variable_set(var, clazz.find(self.context, value_key)) if value_key
+          value = value_key && clazz.find(self.context, value_key) rescue nil
+          instance_variable_set(var, value)
         end
       end
 
