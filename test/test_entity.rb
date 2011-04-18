@@ -11,34 +11,6 @@ end
 
 class TestEntity < Test::Unit::TestCase
 
-  context "[default values]" do
-    should "be returned for missing properties" do
-      bar = Bar.new('cx')
-      assert_equal 123, bar.d
-    end
-
-    should "be returned for properties that are nil" do
-      bar = Bar.new('cx', :d => 'cool')
-      bar.d = nil
-      assert_equal 123, bar.d
-    end
-
-    should "not be returned for given properties" do
-      bar = Bar.new('cx', :d => 'cool')
-      assert_equal 'cool', bar.d
-    end
-
-    should "not be stored" do
-      bar = Bar.create('cx')
-      assert !(/123/ =~ redis.hget('cx', bar.key))
-    end
-
-    should "be returned by as_json" do
-      bar = Bar.new('cx')
-      assert_equal 123, bar.as_json[:d]
-    end
-  end
-
   context "new" do
     should "set properties" do
       foo = Foo.new('cx', :x => 1, :y => 2)

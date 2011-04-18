@@ -86,7 +86,7 @@ module Remodel
       name = name.to_sym
       mapper[name] = Remodel.mapper_for(options[:class])
       default_value = options[:default]
-      define_method(name) { @attributes[name].nil? ? default_value : @attributes[name] }
+      define_method(name) { @attributes[name].nil? ? self.class.copy_of(default_value) : @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
     end
 
@@ -209,6 +209,10 @@ module Remodel
 
     def self.associations
       @associations ||= []
+    end
+
+    def self.copy_of(value)
+      value.is_a?(Array) || value.is_a?(Hash) ? value.dup : value
     end
 
   end
