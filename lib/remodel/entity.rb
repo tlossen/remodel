@@ -41,11 +41,9 @@ module Remodel
 
     def delete
       raise EntityNotSaved unless @key
-      Remodel.redis.pipelined do
-        Remodel.redis.hdel(@context, @key)
-        self.class.associations.each do |name|
-          Remodel.redis.hdel(@context, "#{@key}_#{name}")
-        end
+      Remodel.redis.hdel(@context, @key)
+      self.class.associations.each do |name|
+        Remodel.redis.hdel(@context, "#{@key}_#{name}")
       end
     end
 
