@@ -5,6 +5,10 @@ use [redis](http://github.com/antirez/redis) instead of mysql to store your appl
 remodel (= redis model) is an ActiveRecord-like mapping layer which offers familiar syntax 
 like `has_many`, `has_one` etc. to build your domain model in ruby.
 
+entities are serialized to json and stored as fields in a redis hash. using different hashes
+(called 'contexts' in remodel), you can easily separate data belonging to multiple users, 
+for example.
+
 
 ## why redis?
 
@@ -23,7 +27,7 @@ persistence to disk. for example, on my macbook (2 ghz):
 
 ## how to get started
 
-1. install [redis](http://github.com/antirez/redis) and ezras excellent
+1. install [redis](http://github.com/antirez/redis) and the
 [redis-rb](http://github.com/ezmobius/redis-rb) ruby client:
 
 		$ brew install redis
@@ -49,6 +53,7 @@ define your domain model [like this](http://github.com/tlossen/remodel/blob/mast
 	  has_many :chapters, :class => 'Chapter', :reverse => :book
 	  property :title, :class => 'String'
 	  property :year, :class => 'Integer'
+	  property :author, :class => 'String', :default => '(anonymous)'
 	end
 
 	class Chapter < Remodel::Entity
@@ -58,15 +63,20 @@ define your domain model [like this](http://github.com/tlossen/remodel/blob/mast
 	
 now you can do:
 
-	>> require 'example/book'
+	>> require './example/book'
 	=> true
-	>> book = Book.create :title => 'Moby Dick', :year => 1851
-	=> #<Book(b:3) title: "Moby Dick", year: 1851>
+	>> book = Book.create 'shelf', :title => 'Moby Dick', :year => 1851
+	=> #<Book(shelf, 1) title: "Moby Dick", year: 1851, author: "(anonymous)"> 
 	>> chapter = book.chapters.create :title => 'Ishmael'
-	=> #<Chapter(c:4) title: "Ishmael">
+	=> #<Chapter(shelf, 1) title: "Ishmael"> 
 	>> chapter.book
-	=> #<Book(b:3) title: "Moby Dick", year: 1851>
+	=> #<Book(shelf, 1) title: "Moby Dick", year: 1851, author: "(anonymous)"> 
 
+all entities have been created in the redis hash 'shelf' we have used as context:
+
+	>> Remodel.redis.hgetall 'shelf'
+	=> {"b"=>"1", "b1"=>"{\"title\":\"Moby Dick\",\"year\":1851}", "c"=>"1", 
+	   "c1"=>"{\"title\":\"Ishmael\"}", "c1_book"=>"b1", "b1_chapters"=>"[\"c1\"]"}
 
 ## inspired by
 
@@ -81,16 +91,15 @@ somewhat similar, but instead of serializing to json, stores each attribute unde
 ## todo
 
 * better docs
-* `find_by`
 * make serializer (json, messagepack, marshal ...) configurable
-* benchmarks
 
 
 ## status
 
-still pretty alpha &mdash; play around at your own risk :)
+it has some rough edges, but i have successfully been using remodel in production since summer 2010.
+
 
 
 ## license
 
-[MIT](http://github.com/tlossen/remodel/raw/master/LICENSE), baby!
+[MIT](http://github.com/tlossen/remodel/raw/master/LICENSE)
