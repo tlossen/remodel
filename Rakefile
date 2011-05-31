@@ -4,7 +4,7 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "remodel-h"
+    gem.name = "remodel"
     gem.summary = "remodel variant which uses hashes"
     gem.description = "persist your objects to redis hashes."
     gem.email = "tim@lossen.de"
