@@ -10,6 +10,7 @@ entities are serialized to json and stored as fields in a redis hash. using diff
 for example.
 
 
+
 ## why redis?
 
 redis offers in-memory read and write performance &mdash; on the order of 10K to 100K 
