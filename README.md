@@ -52,7 +52,7 @@ define your domain model [like this](http://github.com/tlossen/remodel/blob/mast
 
 	class Book < Remodel::Entity
 	  has_many :chapters, :class => 'Chapter', :reverse => :book
-	  property :title, :class => 'String'
+	  property :title, :short => 't', :class => 'String'
 	  property :year, :class => 'Integer'
 	  property :author, :class => 'String', :default => '(anonymous)'
 	end
@@ -76,7 +76,7 @@ now you can do:
 all entities have been created in the redis hash 'shelf' we have used as context:
 
 	>> Remodel.redis.hgetall 'shelf'
-	=> {"b"=>"1", "b1"=>"{\"title\":\"Moby Dick\",\"year\":1851}", "c"=>"1", 
+	=> {"b"=>"1", "b1"=>"{\"t\":\"Moby Dick\",\"year\":1851}", "c"=>"1", 
 	   "c1"=>"{\"title\":\"Ishmael\"}", "c1_book"=>"b1", "b1_chapters"=>"[\"c1\"]"}
 
 ## inspired by

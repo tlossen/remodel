@@ -70,7 +70,7 @@ class TestEntity < Test::Unit::TestCase
 
     should "not store the key as a property" do
       foo = Foo.create('cx', :x => 'hello', :y => false)
-      assert !(/f:1/ =~ redis.hget('cx', foo.key))
+      assert !(/f1/ =~ redis.hget('cx', foo.key))
     end
   end
 

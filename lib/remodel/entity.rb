@@ -83,6 +83,7 @@ module Remodel
     def self.property(name, options = {})
       name = name.to_sym
       mapper[name] = Remodel.mapper_for(options[:class])
+      define_shortname(name, options[:short])
       default_value = options[:default]
       define_method(name) { @attributes[name].nil? ? self.class.copy_of(default_value) : @attributes[name] }
       define_method("#{name}=") { |value| @attributes[name] = value }
@@ -186,31 +187,48 @@ module Remodel
     def self.pack(attributes)
       result = {}
       attributes.each do |name, value|
-        result[name] = mapper[name].pack(value)
+        short = shortname[name] || name
+        result[short] = mapper[name].pack(value)
       end
       result
     end
 
     def self.unpack(attributes)
       result = {}
-      attributes.each do |name, value|
-        name = name.to_sym
+      attributes.each do |short, value|
+        short = short.to_sym
+        name = fullname[short] || short
         result[name] = mapper[name].unpack(value) if mapper[name]
       end
       result
     end
 
-    # Lazy init
+    def self.copy_of(value)
+      value.is_a?(Array) || value.is_a?(Hash) ? value.dup : value
+    end
+
+    def self.define_shortname(name, short)
+      return unless short
+      short = short.to_sym
+      shortname[name] = short
+      fullname[short] = name
+    end
+
+    # class instance variables (lazy init)
     def self.mapper
       @mapper ||= {}
     end
 
-    def self.associations
-      @associations ||= []
+    def self.shortname
+      @shortname ||= {}
     end
 
-    def self.copy_of(value)
-      value.is_a?(Array) || value.is_a?(Hash) ? value.dup : value
+    def self.fullname
+      @fullname ||= {}
+    end
+
+    def self.associations
+      @associations ||= []
     end
 
   end
