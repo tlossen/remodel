@@ -66,7 +66,9 @@ now you can do:
 
 	>> require './example/book'
 	=> true
-	>> book = Book.create 'shelf', :title => 'Moby Dick', :year => 1851
+	>> context = Remodel.create_context('shelf')
+	=> #<Remodel::Context(shelf)> 
+	>> book = Book.create context, :title => 'Moby Dick', :year => 1851
 	=> #<Book(shelf, 1) title: "Moby Dick", year: 1851, author: "(anonymous)"> 
 	>> chapter = book.chapters.create :title => 'Ishmael'
 	=> #<Chapter(shelf, 1) title: "Ishmael"> 
