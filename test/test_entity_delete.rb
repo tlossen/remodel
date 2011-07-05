@@ -19,27 +19,27 @@ class TestEntityDelete < Test::Unit::TestCase
   context "delete" do
     setup do
       redis.flushdb
-      @group = Group.create('cx', :name => 'ruby user group')
+      @group = Group.create(context, :name => 'ruby user group')
       @tim = @group.members.create(:name => 'Tim')
       @group.members.create(:name => 'Ben')
-      @room = Room.create(:name => 'some office')
+      @room = Room.create(context, :name => 'some office')
       @group.room = @room
       @group.reload
     end
 
     should "ensure that the entity is persistent" do
-      assert_raise(Remodel::EntityNotSaved) { Group.new('cx').delete }
+      assert_raise(Remodel::EntityNotSaved) { Group.new(context).delete }
     end
 
     should "delete the given entity" do
       @group.delete
-      assert_nil redis.hget(@group.context, @group.key)
+      assert_nil redis.hget(context.key, @group.key)
     end
 
     should "delete any associations in redis" do
       @group.delete
-      assert_nil redis.hget(@group.context, "#{@group.key}_members")
-      assert_nil redis.hget(@group.context, "#{@group.key}_room")
+      assert_nil redis.hget(context.key, "#{@group.key}_members")
+      assert_nil redis.hget(context.key, "#{@group.key}_room")
     end
 
     context "has_one" do

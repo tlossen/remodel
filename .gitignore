@@ -2,3 +2,4 @@ remodel.gemspec
 dump.rdb
 .rvmrc
 pkg/*
+.rvmrc

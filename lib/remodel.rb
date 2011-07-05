@@ -24,6 +24,8 @@ end
 require File.join(File.dirname(__FILE__), 'remodel', 'mapper')
 require File.join(File.dirname(__FILE__), 'remodel', 'has_many')
 require File.join(File.dirname(__FILE__), 'remodel', 'entity')
+require File.join(File.dirname(__FILE__), 'remodel', 'context')
+require File.join(File.dirname(__FILE__), 'remodel', 'caching_context')
 
 
 module Remodel
@@ -45,6 +47,12 @@ module Remodel
 
   def self.redis=(redis)
     @redis = redis
+  end
+
+  def self.create_context(key, options = {})
+    context = Context.send(:new, key)
+    context = CachingContext.send(:new, context) if options[:caching]
+    context
   end
   
   # Returns the mapper defined for a given class, or the identity mapper.

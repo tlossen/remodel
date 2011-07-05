@@ -56,12 +56,12 @@ module Remodel
     end
 
     def _store
-      Remodel.redis.hset(@this.context, @key, JSON.generate(self.map(&:key)))
+      @this.context.hset(@key, JSON.generate(self.map(&:key)))
     end
 
     def _fetch(clazz, context, key)
-      keys = JSON.parse(Remodel.redis.hget(context, key) || '[]').uniq
-      values = keys.empty? ? [] : Remodel.redis.hmget(context, *keys)
+      keys = JSON.parse(context.hget(key) || '[]').uniq
+      values = keys.empty? ? [] : context.hmget(*keys)
       keys.zip(values).map do |key, json|
         clazz.restore(context, key, json) if json
       end.compact

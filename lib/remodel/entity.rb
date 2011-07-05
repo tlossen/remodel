@@ -19,7 +19,7 @@ module Remodel
 
     def save
       @key = next_key unless @key
-      Remodel.redis.hset(@context, @key, to_json)
+      @context.hset(@key, to_json)
       self
     end
 
@@ -41,9 +41,9 @@ module Remodel
 
     def delete
       raise EntityNotSaved unless @key
-      Remodel.redis.hdel(@context, @key)
+      @context.hdel(@key)
       self.class.associations.each do |name|
-        Remodel.redis.hdel(@context, "#{@key}_#{name}")
+        @context.hdel("#{@key}_#{name}")
       end
     end
 
@@ -57,7 +57,7 @@ module Remodel
 
     def inspect
       properties = attributes.map { |name, value| "#{name}: #{value.inspect}" }.join(', ')
-      "\#<#{self.class.name}(#{context}, #{id}) #{properties}>"
+      "\#<#{self.class.name}(#{context.key}, #{id}) #{properties}>"
     end
 
     def self.create(context, attributes = {})
@@ -112,7 +112,7 @@ module Remodel
           instance_variable_get(var)
         else
           clazz = Class[options[:class]]
-          value_key = Remodel.redis.hget(self.context, "#{key}_#{name}")
+          value_key = self.context.hget("#{key}_#{name}")
           value = value_key && clazz.find(self.context, value_key) rescue nil
           instance_variable_set(var, value)
         end
@@ -126,10 +126,10 @@ module Remodel
       define_method("_#{name}=") do |value|
         if value
           instance_variable_set(var, value)
-          Remodel.redis.hset(self.context, "#{key}_#{name}", value.key)
+          self.context.hset("#{key}_#{name}", value.key)
         else
           remove_instance_variable(var) if instance_variable_defined? var
-          Remodel.redis.hdel(self.context, "#{key}_#{name}")
+          self.context.hdel("#{key}_#{name}")
         end
       end; private "_#{name}="
 
@@ -166,12 +166,12 @@ module Remodel
     end
 
     def self.fetch(context, key)
-      Remodel.redis.hget(context, key) || raise(EntityNotFound, "no #{name} with key #{key} in context #{context}")
+      context.hget(key) || raise(EntityNotFound, "no #{name} with key #{key} in context #{context}")
     end
 
     # Each entity has its own sequence to generate unique ids.
     def next_key
-      id = Remodel.redis.hincrby(@context, "#{self.class.key_prefix}", 1)
+      id = @context.hincrby("#{self.class.key_prefix}", 1)
       "#{self.class.key_prefix}#{id}"
     end
 
