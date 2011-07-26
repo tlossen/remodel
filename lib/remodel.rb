@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'redis'
 require 'date'
+require 'set'
 
 # If available, use the superfast YAJL lib to parse JSON.
 begin
@@ -37,6 +38,7 @@ module Remodel
   class InvalidKeyPrefix < Error; end
   class InvalidType < Error; end
   class MissingContext < Error; end
+  class InvalidUse < Error; end
 
   # By default, the redis server is expected to listen at `localhost:6379`.
   # Otherwise you will have to set `Remodel.redis` to a suitably initialized

@@ -17,6 +17,20 @@ module Remodel
       @context.key
     end
 
+    def batched
+      raise InvalidUse, "cannot nest batched blocks" if @dirty
+      begin
+        @dirty = Set.new
+        yield
+      ensure
+        to_delete = @dirty.select { |field| @cache[field].nil? }
+        to_update = (@dirty - to_delete).to_a
+        @context.hmset(*to_update.zip(@cache.values_at(*to_update)).flatten)
+        @context.hmdel(*to_delete)
+        @dirty = nil
+      end
+    end
+
     def hget(field)
       @cache[field] = @context.hget(field) unless @cache.has_key?(field)
       @cache[field]
@@ -30,18 +44,19 @@ module Remodel
     def hset(field, value)
       value = value.to_s if value
       @cache[field] = value
-      @context.hset(field, value)
+      @dirty ? @dirty.add(field) : @context.hset(field, value)
     end
 
     def hincrby(field, value)
-      result = @context.hincrby(field, value)
-      @cache[field] = result.to_s
-      result
+      new_value = @dirty ? hget(field).to_i + value : @context.hincrby(field, value)
+      @cache[field] = new_value.to_s
+      @dirty.add(field) if @dirty
+      new_value
     end
 
     def hdel(field)
       @cache[field] = nil
-      @context.hdel(field)
+      @dirty ? @dirty.add(field) : @context.hdel(field)
     end
 
     def inspect

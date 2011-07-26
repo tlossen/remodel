@@ -111,6 +111,60 @@ class TestCachingContext < Test::Unit::TestCase
         assert @cache.cache.has_key?('x')
       end
     end
+
+    context 'batched' do
+      should "ensure batched blocks are not nested" do
+        assert_raise(Remodel::InvalidUse) do
+          @cache.batched do
+            @cache.batched do
+            end
+          end
+        end
+      end
+
+      should "collect hset calls into one hmset" do
+        context.expects(:hset).never
+        context.expects(:hmset).with('a', '3', 'b', '2') #might break in ruby 1.8
+        @cache.batched do
+          @cache.hset('a', 1)
+          @cache.hset('b', 2)
+          @cache.hset('a', 3)
+        end
+      end
+
+      should "collect hdel calls into one hmdel" do
+        context.expects(:hdel).never
+        context.expects(:hmdel).with('a', 'b')
+        @cache.batched do
+          @cache.hdel('a')
+          @cache.hdel('b')
+          @cache.hdel('a')
+        end
+      end
+
+      should "handle multiple hset and hdel to the same field" do
+        context.expects(:hset).never
+        context.expects(:hdel).never
+        context.expects(:hmset).with('a', '3')
+        context.expects(:hmdel).with()
+        @cache.batched do
+          @cache.hset('a', 1)
+          @cache.hdel('a')
+          @cache.hset('a', 3)
+        end
+      end
+
+      should "handle hincrby" do
+        context.expects(:hset).never
+        context.expects(:hmset).with('i', '2')
+        @cache.batched do
+          @cache.hdel('i')
+          @cache.hincrby('i', 1)
+          @cache.hincrby('i', 1)
+        end
+      end
+    end
+
   end
 
 end
