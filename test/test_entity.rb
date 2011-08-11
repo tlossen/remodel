@@ -97,6 +97,14 @@ class TestEntity < Test::Unit::TestCase
       assert_equal 'hello', foo.x
       assert_equal false, foo.y
     end
+
+    should "not store nil values" do
+      foo = Foo.new(context, :x => nil, :y => false)
+      foo.save
+      foo.reload
+      assert_nil foo.x
+      assert_equal '{"y":false}', redis.hget(context.key, foo.key)
+    end
   end
 
   context "reload" do

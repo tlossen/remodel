@@ -188,7 +188,8 @@ module Remodel
       result = {}
       attributes.each do |name, value|
         short = shortname[name] || name
-        result[short] = mapper[name].pack(value)
+        value = mapper[name].pack(value)
+        result[short] = value unless value.nil?
       end
       result
     end
