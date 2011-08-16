@@ -77,6 +77,7 @@ module Remodel
 
     def self.set_key_prefix(prefix)
       raise(InvalidKeyPrefix, prefix) unless prefix =~ /^[a-z]+$/
+      raise(InvalidUse, "can only set key prefix for direct subclasses of entity") unless superclass == Entity
       @key_prefix = prefix
     end
 
@@ -151,11 +152,6 @@ module Remodel
       "#{self.class.key_prefix}#{id}"
     end
 
-    # Default key prefix is the first letter of the class name, in lowercase.
-    def self.key_prefix
-      @key_prefix ||= name.split('::').last[0,1].downcase
-    end
-
     def self.parse(json)
       unpack(JSON.parse(json))
     end
@@ -194,8 +190,17 @@ module Remodel
     # class instance variables:
     # lazy init + recursive lookup in superclasses
 
+    def self.key_prefix
+      superclass == Entity ? _key_prefix : superclass.key_prefix
+    end
+
+    # Default key prefix is the first letter of the class name, in lowercase.
+    def self._key_prefix
+      @key_prefix ||= name.split('::').last[0,1].downcase
+    end
+
     def self.mapper
-      self == Entity || superclass == Entity ? _mapper : superclass.mapper.merge(_mapper)
+      superclass == Entity ? _mapper : superclass.mapper.merge(_mapper)
     end
 
     def self._mapper
@@ -203,7 +208,7 @@ module Remodel
     end
 
     def self.shortname
-      self == Entity || superclass == Entity ? _shortname : superclass.shortname.merge(_shortname)
+      superclass == Entity ? _shortname : superclass.shortname.merge(_shortname)
     end
 
     def self._shortname
@@ -211,7 +216,7 @@ module Remodel
     end
 
     def self.fullname
-      self == Entity || superclass == Entity ? _fullname : superclass.fullname.merge(_fullname)
+      superclass == Entity ? _fullname : superclass.fullname.merge(_fullname)
     end
 
     def self._fullname
@@ -219,7 +224,7 @@ module Remodel
     end
 
     def self.associations
-      self == Entity || superclass == Entity ? _associations : superclass.associations + _associations
+      superclass == Entity ? _associations : superclass.associations + _associations
     end
 
     def self._associations

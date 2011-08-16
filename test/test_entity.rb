@@ -188,6 +188,12 @@ class TestEntity < Test::Unit::TestCase
         class InvalidPrefix < Remodel::Entity; set_key_prefix '666'; end
       end
     end
+
+    should "ensure that the class is a direct subclass of entity" do
+      assert_raise(Remodel::InvalidUse) do
+        class InvalidSetPrefix < Foo; set_key_prefix 'x'; end
+      end
+    end
   end
 
   context "#find" do

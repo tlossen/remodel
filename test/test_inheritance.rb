@@ -60,6 +60,10 @@ class TestInheritance < Test::Unit::TestCase
       assert_match /"n":/, json
       assert_match /"p":/, json
     end
+
+    should "use the same prefix as the superclass" do
+      assert_equal 'p', Admin.key_prefix
+    end
   end
 
 end
