@@ -82,7 +82,7 @@ module Remodel
 
     def self.property(name, options = {})
       name = name.to_sym
-      mapper[name] = Remodel.mapper_for(options[:class])
+      _mapper[name] = Remodel.mapper_for(options[:class])
       define_shortname(name, options[:short])
       default_value = options[:default]
       define_method(name) { @attributes[name].nil? ? self.class.copy_of(default_value) : @attributes[name] }
@@ -90,7 +90,7 @@ module Remodel
     end
 
     def self.has_many(name, options)
-      associations.push(name)
+      _associations.push(name)
       var = "@#{name}".to_sym
 
       define_method(name) do
@@ -104,7 +104,7 @@ module Remodel
     end
 
     def self.has_one(name, options)
-      associations.push(name)
+      _associations.push(name)
       var = "@#{name}".to_sym
 
       define_method(name) do
@@ -211,24 +211,42 @@ module Remodel
     def self.define_shortname(name, short)
       return unless short
       short = short.to_sym
-      shortname[name] = short
-      fullname[short] = name
+      _shortname[name] = short
+      _fullname[short] = name
     end
 
-    # class instance variables (lazy init)
+    # class instance variables:
+    # lazy init + recursive lookup in superclasses
+
     def self.mapper
+      self == Entity || superclass == Entity ? _mapper : superclass.mapper.merge(_mapper)
+    end
+
+    def self._mapper
       @mapper ||= {}
     end
 
     def self.shortname
+      self == Entity || superclass == Entity ? _shortname : superclass.shortname.merge(_shortname)
+    end
+
+    def self._shortname
       @shortname ||= {}
     end
 
     def self.fullname
+      self == Entity || superclass == Entity ? _fullname : superclass.fullname.merge(_fullname)
+    end
+
+    def self._fullname
       @fullname ||= {}
     end
 
     def self.associations
+      self == Entity || superclass == Entity ? _associations : superclass.associations + _associations
+    end
+
+    def self._associations
       @associations ||= []
     end
 
