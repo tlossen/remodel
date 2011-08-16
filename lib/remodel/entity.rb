@@ -92,13 +92,14 @@ module Remodel
     def self.has_many(name, options)
       _associations.push(name)
       var = "@#{name}".to_sym
+      shortname = options[:short] || name
 
       define_method(name) do
         if instance_variable_defined? var
           instance_variable_get(var)
         else
           clazz = Class[options[:class]]
-          instance_variable_set(var, HasMany.new(self, clazz, "#{key}_#{name}", options[:reverse]))
+          instance_variable_set(var, HasMany.new(self, clazz, "#{key}_#{shortname}", options[:reverse]))
         end
       end
     end
@@ -106,13 +107,14 @@ module Remodel
     def self.has_one(name, options)
       _associations.push(name)
       var = "@#{name}".to_sym
+      shortname = options[:short] || name
 
       define_method(name) do
         if instance_variable_defined? var
           instance_variable_get(var)
         else
           clazz = Class[options[:class]]
-          value_key = self.context.hget("#{key}_#{name}")
+          value_key = self.context.hget("#{key}_#{shortname}")
           value = value_key && clazz.find(self.context, value_key) rescue nil
           instance_variable_set(var, value)
         end
@@ -126,10 +128,10 @@ module Remodel
       define_method("_#{name}=") do |value|
         if value
           instance_variable_set(var, value)
-          self.context.hset("#{key}_#{name}", value.key)
+          self.context.hset("#{key}_#{shortname}", value.key)
         else
           remove_instance_variable(var) if instance_variable_defined? var
-          self.context.hdel("#{key}_#{name}")
+          self.context.hdel("#{key}_#{shortname}")
         end
       end; private "_#{name}="
 
