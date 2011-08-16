@@ -27,8 +27,7 @@ class TestManyToOne < Test::Unit::TestCase
         puzzle = Puzzle.create(context)
         red_piece = Piece.create(context, :color => 'red')
         blue_piece = Piece.create(context, :color => 'blue')
-        value = JSON.generate([red_piece.key, blue_piece.key])
-        redis.hset(context.key, "#{puzzle.key}_pieces", value)
+        redis.hset(context.key, "#{puzzle.key}_pieces", "#{red_piece.key} #{blue_piece.key}")
         assert_equal 2, puzzle.pieces.size
         assert_equal Piece, puzzle.pieces[0].class
         assert_equal 'red', puzzle.pieces[0].color
@@ -37,8 +36,7 @@ class TestManyToOne < Test::Unit::TestCase
       should "not return any child multiple times" do
         puzzle = Puzzle.create(context)
         red_piece = Piece.create(context, :color => 'red')
-        value = JSON.generate([red_piece.key, red_piece.key])
-        redis.hset(context.key, "#{puzzle.key}_pieces", value)
+        redis.hset(context.key, "#{puzzle.key}_pieces", "#{red_piece.key} #{red_piece.key}")
         assert_equal 1, puzzle.pieces.size
         assert_equal Piece, puzzle.pieces[0].class
         assert_equal 'red', puzzle.pieces[0].color

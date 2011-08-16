@@ -56,11 +56,11 @@ module Remodel
     end
 
     def _store
-      @this.context.hset(@key, JSON.generate(self.map(&:key)))
+      @this.context.hset(@key, self.map(&:key).join(' '))
     end
 
     def _fetch(clazz, context, key)
-      keys = JSON.parse(context.hget(key) || '[]').uniq
+      keys = (context.hget(key) || '').split.uniq
       values = keys.empty? ? [] : context.hmget(*keys)
       keys.zip(values).map do |key, json|
         clazz.restore(context, key, json) if json
