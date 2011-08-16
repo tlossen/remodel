@@ -1,6 +1,6 @@
 require 'helper'
 
-class TestEntityShortnames < Test::Unit::TestCase
+class TestShortnames < Test::Unit::TestCase
 
   class Foo < Remodel::Entity; end
 

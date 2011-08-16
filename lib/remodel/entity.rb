@@ -99,7 +99,7 @@ module Remodel
           instance_variable_get(var)
         else
           clazz = Class[options[:class]]
-          instance_variable_set(var, HasMany.new(self, clazz, "#{key}_#{shortname}", options[:reverse]))
+          instance_variable_set(var, HasMany.new(self, clazz, "#{key}_#{shortname}"))
         end
       end
     end
@@ -121,11 +121,6 @@ module Remodel
       end
 
       define_method("#{name}=") do |value|
-        send("_reverse_association_of_#{name}=", value) if options[:reverse]
-        send("_#{name}=", value)
-      end
-
-      define_method("_#{name}=") do |value|
         if value
           instance_variable_set(var, value)
           self.context.hset("#{key}_#{shortname}", value.key)
@@ -133,27 +128,6 @@ module Remodel
           remove_instance_variable(var) if instance_variable_defined? var
           self.context.hdel("#{key}_#{shortname}")
         end
-      end; private "_#{name}="
-
-      if options[:reverse]
-        define_method("_reverse_association_of_#{name}=") do |value|
-          if old_value = send(name)
-            association = old_value.send("#{options[:reverse]}")
-            if association.is_a? HasMany
-              association.send("_remove", self)
-            else
-              old_value.send("_#{options[:reverse]}=", nil)
-            end
-          end
-          if value
-            association = value.send("#{options[:reverse]}")
-            if association.is_a? HasMany
-              association.send("_add", self)
-            else
-              value.send("_#{options[:reverse]}=", self)
-            end
-          end
-        end; private "_reverse_association_of_#{name}="
       end
     end
 

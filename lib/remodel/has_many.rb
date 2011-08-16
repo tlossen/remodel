@@ -2,9 +2,9 @@ module Remodel
 
   # Represents the many-end of a many-to-one or many-to-many association.
   class HasMany < Array
-    def initialize(this, clazz, key, reverse = nil)
+    def initialize(this, clazz, key)
       super _fetch(clazz, this.context, key)
-      @this, @clazz, @key, @reverse = this, clazz, key, reverse
+      @this, @clazz, @key = this, clazz, key
     end
 
     def create(attributes = {})
@@ -16,44 +16,18 @@ module Remodel
     end
 
     def add(entity)
-      _add_to_reverse_association_of(entity) if @reverse
-      _add(entity)
-    end
-
-    def remove(entity)
-      _remove_from_reverse_association_of(entity) if @reverse
-      _remove(entity)
-    end
-
-  private
-
-    def _add(entity)
       self << entity
       _store
       entity
     end
 
-    def _remove(entity)
+    def remove(entity)
       delete_if { |x| x.key == entity.key }
       _store
       entity
     end
 
-    def _add_to_reverse_association_of(entity)
-      if entity.send(@reverse).is_a? HasMany
-        entity.send(@reverse).send(:_add, @this)
-      else
-        entity.send("_#{@reverse}=", @this)
-      end
-    end
-
-    def _remove_from_reverse_association_of(entity)
-      if entity.send(@reverse).is_a? HasMany
-        entity.send(@reverse).send(:_remove, @this)
-      else
-        entity.send("_#{@reverse}=", nil)
-      end
-    end
+  private
 
     def _store
       @this.context.hset(@key, self.map(&:key).join(' '))

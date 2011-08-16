@@ -51,14 +51,13 @@ persistence to disk. for example, on my macbook (2 ghz):
 define your domain model [like this](http://github.com/tlossen/remodel/blob/master/example/book.rb):
 
 	class Book < Remodel::Entity
-	  has_many :chapters, :class => 'Chapter', :reverse => :book
+	  has_many :chapters, :class => 'Chapter'
 	  property :title, :short => 't', :class => 'String'
 	  property :year, :class => 'Integer'
 	  property :author, :class => 'String', :default => '(anonymous)'
 	end
 
 	class Chapter < Remodel::Entity
-	  has_one :book, :class => Book, :reverse => :chapters
 	  property :title, :class => String
 	end
 	
@@ -72,8 +71,6 @@ now you can do:
 	=> #<Book(shelf, 1) title: "Moby Dick", year: 1851, author: "(anonymous)"> 
 	>> chapter = book.chapters.create :title => 'Ishmael'
 	=> #<Chapter(shelf, 1) title: "Ishmael"> 
-	>> chapter.book
-	=> #<Book(shelf, 1) title: "Moby Dick", year: 1851, author: "(anonymous)"> 
 
 all entities have been created in the redis hash 'shelf' we have used as context:
 
